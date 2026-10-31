@@ -152,6 +152,7 @@ def check_markdown_fidelity(temp: Path) -> None:
         ">>3  \n>>14  \n掲示板のレス\n\n"
         "次スレは>>950  \nコメント行\n\n"
         "> 本当の引用\n\n"
+        ">> 二段の引用\n\n"
         "**太字**と[リンク](https://example.org)\n\n"
         "- 箇条書き\n\n"
         "```text\n>>8\n```\n\n"
@@ -165,7 +166,7 @@ def check_markdown_fidelity(temp: Path) -> None:
     assert output.startswith("<h1>第900話")
     assert "&gt;&gt;3<br" in output and "&gt;&gt;14<br" in output
     assert "次スレは&gt;&gt;950<br" in output
-    assert output.count("<blockquote>") == 1
+    assert output.count("<blockquote>") == 3  # real quotation and nested quotation
     assert "<p>本当の引用</p>" in output
     assert "<strong>太字</strong>" in output
     assert '<a href="https://example.org">リンク</a>' in output
