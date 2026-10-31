@@ -88,7 +88,41 @@
   }
   apply();
   const dialog = el("settings");
-  el("open-settings")?.addEventListener("click", () => dialog?.showModal());
+  const settingsScroller = el("settings-scroll");
+  const settingTabs = [...document.querySelectorAll("[data-settings-tab]")];
+  function switchSettingsTab(name) {
+    const chosen = settingTabs.find(tab => tab.dataset.settingsTab === name);
+    if (!chosen) return;
+    for (const tab of settingTabs) {
+      const selected = tab === chosen;
+      tab.setAttribute("aria-selected", selected ? "true" : "false");
+      tab.tabIndex = selected ? 0 : -1;
+      const panel = el(tab.getAttribute("aria-controls"));
+      if (panel) panel.hidden = !selected;
+    }
+    if (settingsScroller) settingsScroller.scrollTop = 0;
+  }
+  settingTabs.forEach((tab, i) => {
+    tab.addEventListener("click", () => switchSettingsTab(tab.dataset.settingsTab));
+    tab.addEventListener("keydown", event => {
+      let next = i;
+      if (event.key === "ArrowRight") next = (i + 1) % settingTabs.length;
+      else if (event.key === "ArrowLeft") next = (i + settingTabs.length - 1) % settingTabs.length;
+      else if (event.key === "Home") next = 0;
+      else if (event.key === "End") next = settingTabs.length - 1;
+      else return;
+      event.preventDefault();
+      const target = settingTabs[next];
+      switchSettingsTab(target.dataset.settingsTab);
+      target.focus();
+    });
+  });
+  el("open-settings")?.addEventListener("click", () => {
+    switchSettingsTab("reading");
+    dialog?.showModal();
+  });
+  el("close-settings")?.addEventListener("click", () => dialog?.close());
+  el("done-settings")?.addEventListener("click", () => dialog?.close());
   dialog?.addEventListener("click", event => { if (event.target === dialog) dialog.close(); });
   document.querySelectorAll('input[name="font"]').forEach(input =>
     input.addEventListener("change", event => { settings.font = event.currentTarget.value; apply(); save(KEY, settings); })
