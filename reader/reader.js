@@ -240,56 +240,111 @@
     window.addEventListener("resize", updateProgress, {passive: true});
     updateProgress();
   } else {
-    const last = read(LAST, null);
     const continuation = el("continue-reading");
     const entries = [...document.querySelectorAll(".work-episodes a")];
-    let finishedCount = 0, startedCount = 0;
-    for (const a of entries) {
-      const chapterPath = new URL(a.href, location.href).pathname;
-      const progress = read(PROGRESS_KEY + chapterPath, null);
-      const legacyScroll = Number(read("velune-reader-scroll:" + chapterPath, 0));
-      const finished = !!(progress && progress.finished);
-      const percent = progress && Number.isFinite(Number(progress.percent))
-        ? Math.min(100, Math.max(0, Math.round(Number(progress.percent)))) : 0;
-      const started = finished || percent > 0 || legacyScroll >= 140;
-      const badge = a.querySelector(".episode-status");
-      if (finished) {
-        finishedCount++;
-        a.closest("li")?.setAttribute("data-reading-state", "finished");
-        if (badge) badge.textContent = "読了";
-      } else if (started) {
-        startedCount++;
-        a.closest("li")?.setAttribute("data-reading-state", "in-progress");
-        if (badge) badge.textContent = percent ? "読書中 " + percent + "%" : "読書中";
-      } else {
-        a.closest("li")?.setAttribute("data-reading-state", "unread");
-        if (badge) badge.textContent = "未読";
+    const episodePaths = entries.map(a => new URL(a.href, location.href).pathname);
+
+    function renderWorkReadingStatus() {
+      const last = read(LAST, null);
+      let finishedCount = 0, startedCount = 0;
+      for (let i = 0; i < entries.length; i++) {
+        const a = entries[i];
+        const chapterPath = episodePaths[i];
+        const progress = read(PROGRESS_KEY + chapterPath, null);
+        const legacyScroll = Number(read("velune-reader-scroll:" + chapterPath, 0));
+        const finished = !!(progress && progress.finished);
+        const percent = progress && Number.isFinite(Number(progress.percent))
+          ? Math.min(100, Math.max(0, Math.round(Number(progress.percent)))) : 0;
+        const started = finished || percent > 0 || legacyScroll >= 140;
+        const badge = a.querySelector(".episode-status");
+        if (finished) {
+          finishedCount++;
+          a.closest("li")?.setAttribute("data-reading-state", "finished");
+          if (badge) badge.textContent = "読了";
+        } else if (started) {
+          startedCount++;
+          a.closest("li")?.setAttribute("data-reading-state", "in-progress");
+          if (badge) badge.textContent = percent ? "読書中 " + percent + "%" : "読書中";
+        } else {
+          a.closest("li")?.setAttribute("data-reading-state", "unread");
+          if (badge) badge.textContent = "未読";
+        }
       }
-    }
-    const total = entries.length;
-    if (el("completed-count")) el("completed-count").textContent =
-      finishedCount + " / " + total + "話 読了";
-    const meter = document.querySelector(".work-progress-track");
-    if (meter) meter.setAttribute("aria-valuenow", String(finishedCount));
-    if (el("work-progress-bar")) el("work-progress-bar").style.width =
-      (total ? finishedCount / total * 100 : 0).toFixed(1) + "%";
-    if (el("reading-summary")) {
-      el("reading-summary").textContent = startedCount
-        ? startedCount + "話を読書中 · " + finishedCount + "話を読了"
-        : finishedCount ? finishedCount + "話を読了しました" : "まだ読んだ話がありません。";
-    }
-    if (continuation && last && typeof last.path === "string") {
-      const index = entries.findIndex(a => new URL(a.href, location.href).pathname === last.path);
-      if (index >= 0) {
-        const previousProgress = read(PROGRESS_KEY + last.path, null);
-        const target = previousProgress?.finished ? entries[index + 1] : entries[index];
-        if (target) {
-          continuation.href = target.href;
-          continuation.textContent = previousProgress?.finished ? "次の話から読む →" : "続きから読む →";
-          continuation.hidden = false;
+      const total = entries.length;
+      if (el("completed-count")) el("completed-count").textContent =
+        finishedCount + " / " + total + "話 読了";
+      const meter = document.querySelector(".work-progress-track");
+      if (meter) meter.setAttribute("aria-valuenow", String(finishedCount));
+      if (el("work-progress-bar")) el("work-progress-bar").style.width =
+        (total ? finishedCount / total * 100 : 0).toFixed(1) + "%";
+      if (el("reading-summary")) {
+        el("reading-summary").textContent = startedCount
+          ? startedCount + "話を読書中 · " + finishedCount + "話を読了"
+          : finishedCount ? finishedCount + "話を読了しました" : "まだ読んだ話がありません。";
+      }
+      if (continuation) {
+        continuation.hidden = true;
+        continuation.removeAttribute("href");
+        if (last && typeof last.path === "string") {
+          const index = episodePaths.indexOf(last.path);
+          if (index >= 0) {
+            const previousProgress = read(PROGRESS_KEY + last.path, null);
+            const target = previousProgress?.finished ? entries[index + 1] : entries[index];
+            if (target) {
+              continuation.href = target.href;
+              continuation.textContent = previousProgress?.finished
+                ? "次の話から読む →" : "続きから読む →";
+              continuation.hidden = false;
+            }
+          }
         }
       }
     }
+
+    // Scope destructive changes to exact episode URLs in this work.
+    // Reader preferences, caches and histories of other works are untouched.
+    function resetWorkReadingStatus() {
+      try {
+        for (const path of episodePaths) {
+          localStorage.removeItem(PROGRESS_KEY + path);
+          localStorage.removeItem("velune-reader-scroll:" + path);
+        }
+        for (const key of [LAST, "velune-reader-last"]) {
+          const last = read(key, null);
+          if (last && typeof last.path === "string" && episodePaths.includes(last.path)) {
+            localStorage.removeItem(key);
+          }
+        }
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    renderWorkReadingStatus();
+    const resetDialog = el("reset-reading-dialog");
+    const errorMessage = el("reset-reading-error");
+    resetDialog?.addEventListener("close", releaseReaderScroll);
+    el("reset-reading")?.addEventListener("click", () => {
+      if (errorMessage) errorMessage.hidden = true;
+      openReaderOverlay(resetDialog);
+      el("cancel-reset-reading")?.focus();
+    });
+    el("cancel-reset-reading")?.addEventListener("click", () => resetDialog?.close());
+    resetDialog?.addEventListener("click", event => {
+      if (event.target === resetDialog) resetDialog.close();
+    });
+    el("confirm-reset-reading")?.addEventListener("click", () => {
+      if (!resetWorkReadingStatus()) {
+        if (errorMessage) {
+          errorMessage.textContent = "読書記録を消去できませんでした。ブラウザの保存設定をご確認ください。";
+          errorMessage.hidden = false;
+        }
+        return;
+      }
+      resetDialog?.close();
+      renderWorkReadingStatus();
+    });
   }
 
   const state = el("offline-state");
