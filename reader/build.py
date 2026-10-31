@@ -354,6 +354,53 @@ def build() -> None:
     (DEST / "index.html").write_text(
         document("作品一覧", library, asset_prefix="./", is_episode=False), encoding="utf-8")
 
+    # One-click transfer page: the browser sends only reading preferences and
+    # episode progress directly to the new site. No server uploads or raw prose.
+    migration_page = r'''<!doctype html><html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shioruneへ読書記録を引き継ぐ</title>
+<style>body{background:#f4edde;color:#28333b;font:16px/1.8 system-ui,"Meiryo UI",sans-serif;margin:0;padding:28px 22px}main{max-width:480px;margin:35px auto}h1{font-size:23px;line-height:1.45}p{margin:12px 0}#state{padding:14px;border-radius:10px;background:#ece1cd}</style></head>
+<body><main><h1>Shioruneへ読書記録を引き継ぐ</h1>
+<p>このページは旧Veluneに保存された読書設定と進捗を、新しいShioruneへ直接渡します。サーバーへは送信しません。</p>
+<p id="state" role="status">記録を確認しています…</p></main>
+<script>
+(() => {
+  "use strict";
+  const target = "https://shiorune.github.io";
+  const kind = "shiorune:reading-transfer:v1";
+  const output = document.getElementById("state");
+  if (!window.opener) {
+    output.textContent = "Shioruneの「旧Veluneから読書記録を引き継ぐ」から開いてください。";
+    return;
+  }
+  try {
+    const records = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key) continue;
+      const fixed = ["velune-reader-settings-v2","velune-reader-settings-v1",
+                     "velune-reader-last-v2","velune-reader-last"].includes(key);
+      const chapter = /^(velune-reading-progress-v1:|velune-reader-scroll:)\\/Velune\\/works\\/[a-z0-9][a-z0-9_-]{0,63}\\/episodes\\/[0-9]+\\.html$/.test(key);
+      if (!fixed && !chapter) continue;
+      const value = localStorage.getItem(key);
+      if (typeof value === "string" && value.length < 20000) records.push([key, value]);
+      if (records.length > 1200) throw new Error("too many entries");
+    }
+    output.textContent = records.length + "件の読書記録を移行しています。";
+    window.opener.postMessage({type: kind, entries: records}, target);
+    window.addEventListener("message", event => {
+      if (event.source !== window.opener || event.origin !== target ||
+          event.data?.type !== kind + ":done") return;
+      output.textContent = "読書記録を引き継ぎました。このウィンドウは閉じてかまいません。";
+      window.close();
+    });
+  } catch {
+    output.textContent = "ブラウザの保存情報を読み取れませんでした。";
+  }
+})();
+</script></body></html>'''
+    (DEST / "migrate.html").write_text(migration_page, encoding="utf-8")
+
     # All public files are explicitly generated. Raw Markdown and indexes stay private.
     shell_urls = ["./", "./index.html", "./assets/reader.css",
                   "./assets/reader.js", "./manifest.webmanifest", "./icon.svg", *toc_paths]
