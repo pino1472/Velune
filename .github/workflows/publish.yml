@@ -36,7 +36,7 @@ jobs:
       - name: Checkout private work library
         uses: actions/checkout@v4
         with:
-          repository: pino1472/Revalna
+          repository: pino1472/Lythia
           ref: main
           path: _source
           token: ${{ secrets.REVALNA_READ_TOKEN }}
