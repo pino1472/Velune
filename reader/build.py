@@ -18,6 +18,46 @@ TITLE = "Velune"
 MARKDOWN = MarkdownIt("commonmark", {"html": False, "linkify": False}).enable("table").enable("strikethrough")
 
 
+
+# An opening ">>123" in a forum excerpt is a literal reply reference.
+# CommonMark otherwise parses it as nested block quotes and hides both ">".
+# Keep Markdown parsing enabled for genuine "> " quotes, headings and links.
+# Do not alter characters in fenced/indented code blocks.
+BBS_REFERENCE = re.compile(r"^([ \\t]{0,3})(>{2,})")
+FENCE_OPEN = re.compile(r"^ {0,3}(`{3,}|~{3,})")
+
+
+def preserve_forum_reply_markers(source: str) -> str:
+    lines = []
+    fence_char = ""
+    fence_length = 0
+    for line in source.splitlines(keepends=True):
+        content = line.rstrip("\\r\\n")
+        if fence_char:
+            closing = re.fullmatch(
+                r" {0,3}" + re.escape(fence_char) +
+                "{" + str(fence_length) + r",}[ \\t]*", content
+            )
+            if closing:
+                fence_char = ""
+            lines.append(line)
+            continue
+        fence = FENCE_OPEN.match(content)
+        if fence:
+            fence_char = fence.group(1)[0]
+            fence_length = len(fence.group(1))
+            lines.append(line)
+            continue
+        match = BBS_REFERENCE.match(line)
+        if match:
+            # Backslash escapes the quote markers, while Markdown still handles
+            # two trailing spaces (hard breaks) and all non-forum markup.
+            line = (match.group(1) + "\\>" * len(match.group(2)) +
+                    line[match.end():])
+        lines.append(line)
+    return "".join(lines)
+
+
 def episode_data(path: Path) -> dict:
     number = int(EPISODE_FILE.fullmatch(path.name).group(1))
     source = path.read_text(encoding="utf-8-sig")
@@ -34,6 +74,7 @@ def episode_data(path: Path) -> dict:
     heading_text = heading.group(1).strip()
     # Preserve Japanese full-width first-line indentation through CommonMark.
     body = re.sub(r"(?m)^(\u3000+)", lambda m: "&#x3000;" * len(m.group(1)), body)
+    body = preserve_forum_reply_markers(body)
     return {"number": number, "name": heading_text,
             "html": MARKDOWN.render(body), "slug": str(number).zfill(3)}
 
