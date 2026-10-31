@@ -52,6 +52,28 @@ def check_build(source: Path, dest: Path, chapters: dict[str, list[str]]) -> Non
             assert f"works/{work_id}/episodes/{name}" in sw
     assert "_template" not in sw
     assert "SECRET" not in root_html
+    # Reader UX contract: use a chapter drawer rather than a sticky footer.
+    ep_html = (dest / "works" / "revalna" / "episodes" /
+               chapters["revalna"][0]).read_text(encoding="utf-8")
+    assert 'id="chapter-list"' in ep_html
+    assert 'id="open-toc"' in ep_html
+    assert 'id="chapter-filter"' in ep_html
+    assert 'aria-current="page"' in ep_html
+    assert '<nav class="chapter-nav"' not in ep_html
+    home_html = (dest / "works" / "revalna" / "index.html").read_text(encoding="utf-8")
+    assert '<details class="offline-tools">' in home_html
+    assert '<section class="offline-library"' not in home_html
+    assert 'id="continue-reading" hidden' in home_html
+    assert 'id="chapter-list"' not in home_html
+    assert 'data-reading-preset="standard"' in ep_html
+    assert 'id="font-size" type="range" min="14" max="28" value="17"' in ep_html
+    assert 'id="line-height" type="range" min="1.4" max="2.6" value="1.8"' in ep_html
+    assert 'id="reader-width" type="range" min="480" max="960" value="680"' in ep_html
+    css = (dest / "assets" / "reader.css").read_text(encoding="utf-8")
+    assert "[hidden]{display:none!important}" in css
+    script = (dest / "assets" / "reader.js").read_text(encoding="utf-8")
+    assert "velune-reader-last-v2" in script
+    assert "if (scrollY >= 140) save(LAST" in script
 
 
 def main() -> None:
