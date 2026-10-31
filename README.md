@@ -5,13 +5,13 @@
 ## 仕組み
 
 - **Public:** `pino1472/Velune` には読書画面とビルドプログラムのみ配置します。
-- **Private:** `pino1472/Revalna` を複数作品の原稿集として使用します。
-- `Revalna/works/<work-id>/work.json` の `published: true` の作品のみ公開します。
+- **Private:** `pino1472/Lythia` を複数作品の原稿集として使用します。
+- `Lythia/works/<work-id>/work.json` の `published: true` の作品のみ公開します。
 - `works/_template/` や `_` 始まりの作品ディレクトリは無条件に除外します。
 - 各作品の本文は `works/<work-id>/story/prose/第[数字]話.md` に統一し、件数は固定しません。先頭のYAML管理情報とINDEXは出力せず、最初のH1から下だけを表示します。
 - 作品一覧 → 作品の目次 → 各話という導線です。
 - 複数作品で共通の8書体・14色＋自由色・文字サイズ・行間・読書位置・オフライン保存に対応します。
-- Actionsは手動実行のみ。Revalnaのコミットでは自動公開しません。
+- Actionsは手動実行のみ。Lythiaのコミットでは自動公開しません。
 
 ## 構成の移行（重要）
 
