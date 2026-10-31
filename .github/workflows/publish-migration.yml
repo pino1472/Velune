@@ -3,9 +3,6 @@ name: Publish Velune reading migration bridge
 # Keep the last working public reader intact; this migration patch does not
 # fetch private manuscripts or require the former source access token.
 on:
-  push:
-    paths:
-      - '.github/workflows/publish-migration.yml'
   workflow_dispatch:
 
 permissions:
