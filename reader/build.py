@@ -122,7 +122,7 @@ def document(title: str, body: str, *, asset_prefix: str, is_episode: bool, toc_
 <link rel="manifest" href="{asset_prefix}manifest.webmanifest"><link rel="icon" href="{asset_prefix}icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="{asset_prefix}assets/reader.css"><title>{html.escape(title)} - {TITLE}</title></head>
 <body data-episode="{'true' if is_episode else 'false'}">
-<header class="topbar"><a class="brand" href="{asset_prefix}index.html">Velune</a><div class="topbar-controls"><span class="offline-state" id="offline-state" aria-live="polite"></span>{toc_button}<button id="open-settings" type="button" class="icon-btn" aria-label="表示設定">Aa</button></div></header>
+<header class="topbar"><a class="brand" href="{asset_prefix}index.html" aria-label="Velune 作品一覧へ"><img src="{asset_prefix}icon.svg" alt="" aria-hidden="true" width="28" height="28"><span>Velune</span></a><div class="topbar-controls"><span class="offline-state" id="offline-state" aria-live="polite"></span>{toc_button}<button id="open-settings" type="button" class="icon-btn" aria-label="表示設定">Aa</button></div></header>
 <main class="reading-area">{body}</main>
 {toc_dialog}
 {settings}<div class="progress-track" id="progress-track" aria-hidden="true"></div>
@@ -182,9 +182,7 @@ def build() -> None:
     (DEST / "works").mkdir()
     for name in ("reader.css", "reader.js"):
         shutil.copyfile(ROOT / "reader" / name, DEST / "assets" / name)
-    (DEST / "icon.svg").write_text(
-        '''<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192"><rect width="192" height="192" rx="40" fill="#4d483d"/><path d="M38 50c25-11 44-4 58 7 14-11 33-18 58-7v94c-25-11-44-4-58 7-14-11-33-18-58-7z" stroke="#f5eddc" stroke-width="9" fill="none"/><path d="M96 57v95" stroke="#f5eddc" stroke-width="8"/></svg>''',
-        encoding="utf-8")
+    shutil.copyfile(ROOT / "reader" / "icon.svg", DEST / "icon.svg")
     manifest = {
         "name": "Velune", "short_name": "Velune", "lang": "ja",
         "start_url": "./index.html", "scope": "./", "display": "standalone",
@@ -219,40 +217,76 @@ def build() -> None:
             dest.write_text(page, encoding="utf-8")
             chapter_paths.append("./" + dest.relative_to(DEST).as_posix())
         links = "\n".join(
-            f'<li><a href="./episodes/{ep["slug"]}.html">{html.escape(ep["name"])}</a></li>'
+            '<li><a href="./episodes/' + ep["slug"] + '.html">'
+            '<span class="episode-title">' + html.escape(ep["name"]) + '</span>'
+            '<span class="episode-status" aria-label="読書状況">未読</span>'
+            '</a></li>'
             for ep in episodes)
         overview = (
-            '<section class="work-overview" aria-labelledby="work-overview-title">'
+            '<section class="work-synopsis" aria-labelledby="work-overview-title">'
             '<h2 id="work-overview-title">あらすじ</h2>'
             f'<p>{html.escape(description)}</p></section>'
             if description else ""
         )
-        home = (f'<section class="home work-index"><p class="eyebrow">VELUNE · NOVEL</p>'
-                f'<h1>{html.escape(title)}</h1><p class="subheading">{len(episodes)}話</p>'
-                f'{overview}'
-                '<p class="work-back"><a href="../../index.html">← 作品一覧へ戻る</a></p>'
-                '<a class="continue" id="continue-reading" hidden>続きを読む →</a>'
-                '<details class="offline-tools"><summary>オフライン保存'
-                '<span aria-hidden="true" class="offline-chevron">⌄</span></summary>'
-                '<div class="offline-detail"><p>この作品をまとめて端末に保存できます。</p>'
-                '<button type="button" id="save-all">全話を保存</button>'
-                '<p class="offline-progress" id="offline-progress" aria-live="polite">'
-                '保存状況を確認しています</p></div></details>'
-                f'<div class="toc-heading"><h2>目次</h2><span id="toc-count">{len(episodes)}話</span></div>'
-                f'<ol class="toc">{links}</ol></section>')
+        cover = ('<div class="work-cover" aria-hidden="true">'
+                 '<img src="../../icon.svg" alt="" width="86" height="86">'
+                 '<span>VELUNE STORIES</span></div>')
+        first_href = './episodes/' + episodes[0]["slug"] + '.html'
+        hero = (
+            '<section class="work-hero" aria-label="作品情報">'
+            '<div class="work-hero-main">' + cover +
+            '<div class="work-hero-info"><p class="work-category">WEB NOVEL</p>'
+            f'<h1>{html.escape(title)}</h1>'
+            f'<div class="work-meta"><span>全{len(episodes)}話</span>'
+            '<span>いつでも読める</span></div></div></div>'
+            '<div class="work-action-row">'
+            f'<a class="start-reading" href="{first_href}">第1話から読む <span aria-hidden="true">→</span></a>'
+            '<a class="continue" id="continue-reading" hidden>続きを読む <span aria-hidden="true">→</span></a>'
+            '</div></section>'
+        )
+        home = (
+            '<div class="work-detail"><nav class="work-breadcrumb" aria-label="パンくずリスト">'
+            '<a href="../../index.html">作品一覧</a><span aria-hidden="true"> / </span>'
+            f'<span aria-current="page">{html.escape(title)}</span></nav>'
+            + hero + overview +
+            '<section class="work-progress" aria-label="読書の進捗">'
+            '<div class="work-progress-heading"><strong>読書の進捗</strong>'
+            f'<span id="completed-count">0 / {len(episodes)}話 読了</span></div>'
+            '<div class="work-progress-track" role="progressbar" aria-label="読了した話数"'
+            f' aria-valuemin="0" aria-valuemax="{len(episodes)}" aria-valuenow="0">'
+            '<span id="work-progress-bar"></span></div>'
+            '<p id="reading-summary">まだ読んだ話がありません。</p>'
+            '</section>'
+            '<section class="work-episodes-section" aria-labelledby="episode-list-title">'
+            f'<div class="work-episode-heading"><div><p>EPISODES</p><h2 id="episode-list-title">エピソード一覧</h2></div>'
+            f'<span>{len(episodes)}話</span></div>'
+            '<details class="offline-tools"><summary>オフライン保存'
+            '<span aria-hidden="true" class="offline-chevron">⌄</span></summary>'
+            '<div class="offline-detail"><p>この作品をまとめて端末に保存できます。</p>'
+            '<button type="button" id="save-all">全話を保存</button>'
+            '<p class="offline-progress" id="offline-progress" aria-live="polite">'
+            '保存状況を確認しています</p></div></details>'
+            f'<ol class="toc work-episodes">{links}</ol>'
+            '</section></div>'
+        )
         (book_dir / "index.html").write_text(
             document(title, home, asset_prefix="../../", is_episode=False), encoding="utf-8")
         toc_paths.append(f"./works/{work_id}/index.html")
+        teaser = html.escape(description[:85] + ("…" if len(description) > 85 else ""))
         library_items.append(
             '<li class="work-item"><a class="work-card" href="./works/' + work_id + '/index.html">'
-            '<span class="work-card-title">' + html.escape(title) + '</span>'
-            '<span class="work-card-count">' + str(len(episodes)) + '話 <span aria-hidden="true">›</span></span>'
+            '<span class="work-card-cover" aria-hidden="true"><img src="./icon.svg" alt="" width="46" height="46"></span>'
+            '<span class="work-card-details"><strong class="work-card-title">' + html.escape(title) + '</strong>'
+            '<span class="work-card-teaser">' + teaser + '</span>'
+            '<span class="work-card-count">全' + str(len(episodes)) + '話</span></span>'
+            '<span class="work-card-arrow" aria-hidden="true">›</span>'
             '</a></li>')
         total_episodes += len(episodes)
 
-    library = (f'<section class="home velune-library"><p class="eyebrow">YOUR STORY SHELF</p>'
-               f'<h1>Velune</h1><p class="subheading">物語を、好きな読み心地で。</p>'
-               f'<div class="toc-heading"><h2>作品一覧</h2><span>{len(works)}作品</span></div>'
+    library = (f'<section class="home velune-library">'
+               '<div class="library-intro"><p class="eyebrow">A PLACE BETWEEN PAGES</p>'
+               '<h1>Velune</h1><p class="subheading">物語を、好きな読み心地で。</p></div>'
+               f'<div class="library-heading"><h2>作品一覧</h2><span>{len(works)}作品</span></div>'
                '<ul class="work-list">' + "".join(library_items) + '</ul></section>')
     (DEST / "index.html").write_text(
         document("作品一覧", library, asset_prefix="./", is_episode=False), encoding="utf-8")
