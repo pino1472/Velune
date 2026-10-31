@@ -3,10 +3,6 @@ name: Publish Velune reader
 # Explicit only. Updating the private source repository never triggers this workflow.
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - 'reader/**'
 
 permissions:
   contents: read
