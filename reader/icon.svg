@@ -1,10 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" role="img" aria-labelledby="title">
-<title id="title">Velune — 月と開いた本</title>
-<defs><linearGradient id="ink" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#294456"/><stop offset="1" stop-color="#172631"/></linearGradient><linearGradient id="page" x1="0" y1="0" x2=".7" y2="1"><stop stop-color="#fff3d8"/><stop offset="1" stop-color="#c5a986"/></linearGradient></defs>
-<rect x="2" y="2" width="188" height="188" rx="40" fill="url(#ink)"/>
-<path d="M35 61C57 53 78 63 93 88L95 152C75 125 53 122 30 124L35 61Z" fill="#f4e6c9"/>
-<path d="M157 61C135 53 114 63 99 88L97 152C117 125 139 122 162 124L157 61Z" fill="url(#page)"/>
-<path d="M95 152C107 121 124 104 151 100M95 152C112 133 137 125 160 126M95 152C76 129 55 121 33 122" fill="none" stroke="#405668" stroke-width="4" stroke-linecap="round" opacity=".85"/>
-<path d="M97 72C89 61 91 41 102 31C111 23 123 22 130 27C110 29 105 51 120 62C110 68 104 70 97 72Z" fill="#d9ad76"/>
-<path d="M149 36L152 44L160 47L152 50L149 58L146 50L138 47L146 44Z" fill="#d9ad76"/>
+<title id="title">Shiorune — 折り紙のしおり</title>
+<defs>
+  <linearGradient id="night" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#243a58"/><stop offset="1" stop-color="#102239"/></linearGradient>
+  <linearGradient id="ribbon" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#77a8a8"/><stop offset="1" stop-color="#367786"/></linearGradient>
+  <linearGradient id="paper" x1="0" y1="0" x2=".6" y2="1"><stop stop-color="#fff8e9"/><stop offset="1" stop-color="#e2d4bc"/></linearGradient>
+</defs>
+<rect x="2" y="2" width="188" height="188" rx="38" fill="url(#night)"/>
+<path d="M44 61 100 31 145 49 100 74 65 91 118 119 113 146 50 105 38 87Z" fill="url(#paper)"/>
+<path d="M38 87 65 91 118 119 103 137 50 107 38 101Z" fill="url(#ribbon)"/>
+<path d="M100 74 145 49 129 81 103 96 65 91Z" fill="#263d57"/>
+<path d="M103 137 118 119 126 126 126 166 109 154 92 169 92 142Z" fill="#e07a6a"/>
+<path d="M44 61 100 31 145 49 100 74" fill="none" stroke="#ffffff" stroke-opacity=".22" stroke-width="2"/>
 </svg>
