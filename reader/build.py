@@ -32,6 +32,8 @@ def episode_data(path: Path) -> dict:
         raise ValueError(f"No level-1 story title: {path}")
     body = source[heading.start():].strip()
     heading_text = heading.group(1).strip()
+    # Preserve Japanese full-width first-line indentation through CommonMark.
+    body = re.sub(r"(?m)^(\u3000+)", lambda m: "&#x3000;" * len(m.group(1)), body)
     return {"number": number, "name": heading_text,
             "html": MARKDOWN.render(body), "slug": str(number).zfill(3)}
 
