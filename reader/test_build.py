@@ -31,7 +31,10 @@ def check_build(source: Path, dest: Path, chapters: dict[str, list[str]]) -> Non
     mod.DEST = dest
     mod.build()
     root_html = (dest / "index.html").read_text(encoding="utf-8")
-    assert "Velune" in root_html
+    assert "Shiorune" in root_html
+    assert "Velune" not in root_html
+    assert "読む、見つかる、好きがふえる。" not in root_html
+    assert 'aria-label="Shiorune 作品一覧へ"' in root_html
     for work_id, names in chapters.items():
         ep_folder = dest / "works" / work_id / "episodes"
         assert ep_folder.is_dir()
@@ -84,6 +87,8 @@ def check_build(source: Path, dest: Path, chapters: dict[str, list[str]]) -> Non
     assert 'id="continue-reading" hidden' in home_html
     assert '<img src="../../icon.svg"' in home_html
     assert (dest / "icon.svg").exists()
+    assert "Shiorune" in (dest / "icon.svg").read_text(encoding="utf-8")
+    assert "読む、見つかる、好きがふえる。" not in (dest / "icon.svg").read_text(encoding="utf-8")
     assert 'id="chapter-list"' not in home_html
     assert 'id="toc-filter"' not in home_html
     assert 'class="open-episode-list"' in home_html
