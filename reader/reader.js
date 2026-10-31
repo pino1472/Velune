@@ -2,7 +2,7 @@
   "use strict";
   const KEY = "velune-reader-settings-v2";
   const LAST = "velune-reader-last-v2";
-  const defaults = {font: "meiryo", fontSize: 17, lineHeight: 1.8, readerWidth: 680, theme: "paper", customColor: "#f4edde"};
+  const defaults = {font: "meiryo", fontSize: 17, lineHeight: 1.8, theme: "paper", customColor: "#f4edde"};
   const fonts = {
     serif: '"Noto Serif CJK JP","Hiragino Mincho ProN","Yu Mincho","MS PMincho",serif',
     "yu-mincho": '"Yu Mincho","YuMincho","Hiragino Mincho ProN","Noto Serif CJK JP",serif',
@@ -32,18 +32,17 @@
   const legacy = stored === null ? read("velune-reader-settings-v1", null) : null;
   const earlier = stored || legacy;
   const settings = {...defaults, ...(earlier && typeof earlier === "object" ? earlier : {})};
-  // Only migrate the old untouched 18/1.9/720 defaults, never override custom sizes.
+  // Migrate only untouched historical typography defaults; preserve custom settings.
   if (stored === null && legacy && Number(legacy.fontSize) === 18 &&
-      Number(legacy.lineHeight) === 1.9 && Number(legacy.readerWidth) === 720) {
+      Number(legacy.lineHeight) === 1.9) {
     settings.fontSize = defaults.fontSize;
     settings.lineHeight = defaults.lineHeight;
-    settings.readerWidth = defaults.readerWidth;
   }
 
   const readingPresets = {
-    compact: {fontSize: 15, lineHeight: 1.6, readerWidth: 720},
-    standard: {fontSize: 17, lineHeight: 1.8, readerWidth: 680},
-    relaxed: {fontSize: 19, lineHeight: 2.0, readerWidth: 640}
+    compact: {fontSize: 15, lineHeight: 1.6},
+    standard: {fontSize: 17, lineHeight: 1.8},
+    relaxed: {fontSize: 19, lineHeight: 2.0}
   };
   function luminance(hex) {
     const rgb = [1, 3, 5].map(index => parseInt(hex.slice(index, index + 2), 16) / 255);
@@ -56,7 +55,6 @@
     if (!/^#[0-9a-f]{6}$/i.test(settings.customColor)) settings.customColor = defaults.customColor;
     settings.fontSize = Math.max(14, Math.min(28, Number(settings.fontSize) || defaults.fontSize));
     settings.lineHeight = Math.max(1.4, Math.min(2.6, Number(settings.lineHeight) || defaults.lineHeight));
-    settings.readerWidth = Math.max(480, Math.min(960, Number(settings.readerWidth) || defaults.readerWidth));
     const root = document.documentElement;
     const bg = settings.theme === "custom" ? settings.customColor : palettes[settings.theme];
     const isDark = luminance(bg) < 0.24;
@@ -70,19 +68,17 @@
     root.style.setProperty("--reader-font", fonts[settings.font]);
     root.style.setProperty("--font-size", settings.fontSize + "px");
     root.style.setProperty("--line-height", settings.lineHeight.toFixed(1));
-    root.style.setProperty("--reader-width", settings.readerWidth + "px");
-    const nums = {"font-size": settings.fontSize, "line-height": settings.lineHeight, "reader-width": settings.readerWidth};
+    const nums = {"font-size": settings.fontSize, "line-height": settings.lineHeight};
     Object.entries(nums).forEach(([id, value]) => { if (el(id)) el(id).value = value; });
     if (el("font-value")) el("font-value").textContent = settings.fontSize + "px";
     if (el("line-value")) el("line-value").textContent = settings.lineHeight.toFixed(1);
-    if (el("width-value")) el("width-value").textContent = settings.readerWidth + "px";
     document.querySelectorAll('input[name="theme"]').forEach(input => { input.checked = input.value === settings.theme; });
     document.querySelectorAll('input[name="font"]').forEach(input => { input.checked = input.value === settings.font; });
     if (el("custom-color")) el("custom-color").value = settings.customColor;
     document.querySelectorAll("[data-reading-preset]").forEach(button => {
       const preset = readingPresets[button.dataset.readingPreset];
       const active = preset && preset.fontSize === settings.fontSize &&
-        preset.lineHeight === settings.lineHeight && preset.readerWidth === settings.readerWidth;
+        preset.lineHeight === settings.lineHeight;
       button.setAttribute("aria-pressed", active ? "true" : "false");
     });
   }
@@ -169,8 +165,7 @@
   });
   [
     ["font-size", "fontSize"],
-    ["line-height", "lineHeight"],
-    ["reader-width", "readerWidth"]
+    ["line-height", "lineHeight"]
   ].forEach(([id, prop]) =>
     el(id)?.addEventListener("input", event => {
       settings[prop] = Number(event.currentTarget.value);
@@ -195,7 +190,9 @@
 
   const tocDialog = el("chapter-list");
   tocDialog?.addEventListener("close", releaseReaderScroll);
-  el("open-toc")?.addEventListener("click", () => {
+  el("open-toc")?.addEventListener("click", event => {
+    if (!tocDialog || typeof tocDialog.showModal !== "function") return;
+    event.preventDefault();
     openReaderOverlay(tocDialog);
     const active = tocDialog?.querySelector('[aria-current="page"]');
     if (active) requestAnimationFrame(() => active.scrollIntoView({block: "center"}));
