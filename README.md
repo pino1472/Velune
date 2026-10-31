@@ -1,16 +1,21 @@
 # Velune
 
-リヴェルナ・オンラインをスマートフォンで読むための、GitHub Pages / PWA リーダーです。
+Lythiaで管理する複数の自作小説を、スマートフォンで読むためのGitHub Pages / PWAリーダーです。
 
 ## 仕組み
 
-- 公開リポジトリ **pino1472/Velune** はリーダーのコードだけを保存します。
-- 非公開リポジトリ **pino1472/Revalna** の `main:story/prose/` から、手動公開時だけ `第[数字]話.md` を取得します。
-- 生成時に先頭の管理情報（frontmatter）を捨て、各話の **最初のH1見出しから下**をHTML化します。
-- **`story/prose/INDEX.md` は公開しません。** 管理用の `canon/`, `state/`, `story/plot/` も公開しません。
-- 全話を毎回検出するため、話数の増減や改題は次回の手動公開で反映されます。
-- 8書体プリセット（Meiryo UI 等）、14色＋任意背景色、文字サイズ、行間、本文幅、目次検索、途中再開、キャッシュ／一括オフライン保存。
-- なろう・カクヨムなど外部作品の機能はありません。
+- **Public:** `pino1472/Velune` には読書画面とビルドプログラムのみ配置します。
+- **Private:** `pino1472/Lythia` を複数作品の原稿集として使用します。
+- `Lythia/works/<work-id>/work.json` の `published: true` の作品のみ公開します。
+- `works/_template/` や `_` 始まりの作品ディレクトリは無条件に除外します。
+- 各作品の本文は `works/<work-id>/story/prose/第[数字]話.md` に統一し、件数は固定しません。先頭のYAML管理情報とINDEXは出力せず、最初のH1から下だけを表示します。
+- 作品一覧 → 作品の目次 → 各話という導線です。
+- 複数作品で共通の8書体・14色＋自由色・文字サイズ・行間・読書位置・オフライン保存に対応します。
+- Actionsは手動実行のみ。Lythiaのコミットでは自動公開しません。
+
+## 構成の移行（重要）
+
+Lythiaへの改名と、`works/revalna/`・`works/_template/`を含む構成移行が完了してから公開ビルドを実行してください。
 
 ## 初回設定（GitHub UIで行う操作）
 
@@ -19,7 +24,7 @@
 GitHubアカウントで **Fine-grained personal access token** を発行します。
 
 - Resource owner: `pino1472`
-- Repository access: **Only select repositories** → `Revalna` のみ
+- Repository access: **Only select repositories** → `Lythia` のみ
 - Repository permissions: **Contents: Read-only**（Metadata: Read-only は自動付与）
 - 有効期限は適切な期間を設定
 
@@ -27,7 +32,7 @@ GitHubアカウントで **Fine-grained personal access token** を発行しま�
 
 Veluneの **Settings → Secrets and variables → Actions → New repository secret** で以下を登録します。
 
-- Name: **`REVALNA_READ_TOKEN`**
+- Name: **`LYTHIA_READ_TOKEN`**（従来の `REVALNA_READ_TOKEN` も使用可能）
 - Secret: 発行したトークン
 
 公開リポジトリ内のコードにトークンを書かず、Actions実行中だけ認証に使います。
@@ -51,7 +56,7 @@ python -m pip install -r requirements.txt
 python reader/test_build.py
 ```
 
-ローカルで原稿を取り込む場合、`_source/story/prose/` にファイルを置いて `python reader/build.py` を実行します。生成物は `dist/` です。
+ローカルで原稿を取り込む場合、`_source/works/<work-id>/story/prose/` にファイルを置いて `python reader/build.py` を実行します。生成物は `dist/` です。
 
 ## 安全性とオフライン
 

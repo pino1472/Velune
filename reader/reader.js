@@ -1,7 +1,7 @@
 (() => {
   "use strict";
-  const KEY = "revalna-reader-settings-v2";
-  const LAST = "revalna-reader-last";
+  const KEY = "velune-reader-settings-v1";
+  const LAST = "velune-reader-last";
   const defaults = {font: "meiryo", fontSize: 18, lineHeight: 1.9, readerWidth: 720, theme: "paper", customColor: "#f4edde"};
   const fonts = {
     serif: '"Noto Serif CJK JP","Hiragino Mincho ProN","Yu Mincho","MS PMincho",serif',
@@ -102,7 +102,7 @@
   if (document.body.dataset.episode === "true") {
     const title = document.querySelector(".prose h1")?.textContent || document.title;
     save(LAST, {path: location.pathname, title});
-    const positionKey = "revalna-reader-scroll:" + location.pathname;
+    const positionKey = "velune-reader-scroll:" + location.pathname;
     const previous = Number(read(positionKey, 0));
     if (Number.isFinite(previous) && previous > 0) {
       requestAnimationFrame(() => scrollTo({top: previous, behavior: "instant"}));
@@ -124,7 +124,7 @@
   } else {
     const last = read(LAST, null);
     const continuation = el("continue-reading");
-    const episodeRoot = new URL("episodes/", new URL(document.querySelector('meta[name="app-root"]').content, location.href)).pathname;
+    const episodeRoot = new URL("episodes/", location.href).pathname;
     if (last && typeof last.path === "string" && last.path.startsWith(episodeRoot) && /^\/[^?#]*\.html$/.test(last.path) && continuation) {
       const match = Array.from(document.querySelectorAll(".toc a")).find(a => new URL(a.href).pathname === last.path);
       if (match) {
@@ -146,7 +146,7 @@
   }
 
   const state = el("offline-state");
-  const EPISODE_CACHE = "revalna-episodes-v1";
+  const EPISODE_CACHE = "velune-episodes-v1";
   const inEpisode = document.body.dataset.episode === "true";
   let offlineReady = false;
   let currentSaved = false;

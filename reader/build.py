@@ -10,11 +10,11 @@ from pathlib import Path
 from markdown_it import MarkdownIt
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / "_source" / "story" / "prose"
+SOURCE = ROOT / "_source" / "works"
 DEST = ROOT / "dist"
 EPISODE_FILE = re.compile(r"^第([0-9]+)話\.md$")
 HEADLINE = re.compile(r"^# +([^\n]+)\s*$", flags=re.MULTILINE)
-TITLE = "リヴェルナ・オンライン"
+TITLE = "Velune"
 MARKDOWN = MarkdownIt("commonmark", {"html": False, "linkify": False}).enable("table").enable("strikethrough")
 
 
@@ -32,6 +32,8 @@ def episode_data(path: Path) -> dict:
         raise ValueError(f"No level-1 story title: {path}")
     body = source[heading.start():].strip()
     heading_text = heading.group(1).strip()
+    # Preserve Japanese full-width first-line indentation through CommonMark.
+    body = re.sub(r"(?m)^(\u3000+)", lambda m: "&#x3000;" * len(m.group(1)), body)
     return {"number": number, "name": heading_text,
             "html": MARKDOWN.render(body), "slug": str(number).zfill(3)}
 
@@ -75,64 +77,146 @@ def document(title: str, body: str, *, asset_prefix: str, is_episode: bool, prev
       </form></dialog>'''
     nav = '<nav class="chapter-nav" aria-label="話数移動">'
     nav += (f'<a rel="prev" href="{previous}">← 前の話</a>' if previous else '<span></span>')
-    nav += f'<a href="{asset_prefix}index.html">目次</a>'
+    nav += '<a href="../index.html">目次</a>'
     nav += (f'<a rel="next" href="{following}">次の話 →</a>' if following else '<span></span>')
     nav += '</nav>'
     return f'''<!doctype html>
 <html lang="ja" data-theme="paper"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#f4edde"><meta name="app-root" content="{asset_prefix}"><meta name="description" content="リヴェルナ・オンライン 小説リーダー">
+<meta name="theme-color" content="#f4edde"><meta name="app-root" content="{asset_prefix}"><meta name="description" content="Velune 小説リーダー">
 <link rel="manifest" href="{asset_prefix}manifest.webmanifest"><link rel="icon" href="{asset_prefix}icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="{asset_prefix}assets/reader.css"><title>{html.escape(title)} - {TITLE}</title></head>
 <body data-episode="{'true' if is_episode else 'false'}">
-<header class="topbar"><a class="brand" href="{asset_prefix}index.html">リヴェルナ・オンライン</a><div class="topbar-controls"><span class="offline-state" id="offline-state" aria-live="polite"></span><button id="open-settings" type="button" class="icon-btn" aria-label="表示設定">Aa</button></div></header>
+<header class="topbar"><a class="brand" href="{asset_prefix}index.html">Velune</a><div class="topbar-controls"><span class="offline-state" id="offline-state" aria-live="polite"></span><button id="open-settings" type="button" class="icon-btn" aria-label="表示設定">Aa</button></div></header>
 <main class="reading-area">{body}</main>
 {nav if is_episode else ''}
 {settings}<div class="progress-track" id="progress-track" aria-hidden="true"></div>
 <script defer src="{asset_prefix}assets/reader.js"></script></body></html>'''
 
 
-def build() -> None:
+WORK_ID = re.compile(r"^[a-z][a-z0-9-]{0,63}$")
+
+
+def collect_works() -> list[dict]:
     if not SOURCE.is_dir():
-        raise SystemExit(f"Missing prose directory: {SOURCE}")
-    episodes = [episode_data(path) for path in SOURCE.iterdir()
-                if path.is_file() and EPISODE_FILE.fullmatch(path.name)]
-    episodes.sort(key=lambda episode: episode["number"])
-    if not episodes:
-        raise SystemExit("No matching 第NNN話.md prose files found")
-    numbers = [x["number"] for x in episodes]
-    if len(numbers) != len(set(numbers)):
-        raise SystemExit("Duplicate numeric episode filenames")
+        raise SystemExit(f"Missing works directory: {SOURCE}")
+    works = []
+    for folder in sorted(SOURCE.iterdir()):
+        # The template and all underscore-prefixed directories are never published.
+        if not folder.is_dir() or folder.name.startswith(("_", ".")):
+            continue
+        manifest = folder / "work.json"
+        if not manifest.is_file():
+            continue
+        data = json.loads(manifest.read_text(encoding="utf-8"))
+        if not isinstance(data, dict) or data.get("published") is not True:
+            continue
+        work_id = data.get("id")
+        title = data.get("title")
+        if (not isinstance(work_id, str) or not WORK_ID.fullmatch(work_id)
+                or work_id != folder.name):
+            raise ValueError(f"Invalid published work id in {manifest}")
+        if not isinstance(title, str) or not title.strip():
+            raise ValueError(f"Missing title in {manifest}")
+        prose = folder / "story" / "prose"
+        if not prose.is_dir():
+            raise ValueError(f"Missing story/prose directory: {folder}")
+        episodes = [episode_data(path) for path in prose.iterdir()
+                    if path.is_file() and EPISODE_FILE.fullmatch(path.name)]
+        episodes.sort(key=lambda episode: episode["number"])
+        if len({ep["number"] for ep in episodes}) != len(episodes):
+            raise ValueError(f"Duplicate episode numbers in {folder}")
+        if not episodes:
+            raise ValueError(f"Published work has no prose episodes: {folder}")
+        works.append({"id": work_id, "title": title.strip(), "episodes": episodes})
+    if not works:
+        raise SystemExit("No published work found under _source/works")
+    return works
+
+
+def build() -> None:
+    works = collect_works()
     if DEST.exists():
         shutil.rmtree(DEST)
-    (DEST / "episodes").mkdir(parents=True)
-    (DEST / "assets").mkdir()
+    (DEST / "assets").mkdir(parents=True)
+    (DEST / "works").mkdir()
     for name in ("reader.css", "reader.js"):
         shutil.copyfile(ROOT / "reader" / name, DEST / "assets" / name)
-    (DEST / "icon.svg").write_text('''<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192"><rect width="192" height="192" rx="40" fill="#4d483d"/><path d="M38 50c25-11 44-4 58 7 14-11 33-18 58-7v94c-25-11-44-4-58 7-14-11-33-18-58-7z" stroke="#f5eddc" stroke-width="9" fill="none"/><path d="M96 57v95" stroke="#f5eddc" stroke-width="8"/></svg>''', encoding="utf8")
-    manifest = {"name": TITLE, "short_name": "リヴェルナ", "lang": "ja",
-                "start_url": "./index.html", "scope": "./", "display": "standalone", "background_color": "#f4edde", "theme_color": "#4d483d",
-                "icons": [{"src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable"}]}
-    (DEST / "manifest.webmanifest").write_text(json.dumps(manifest, ensure_ascii=False), encoding="utf8")
-    (DEST / ".nojekyll").write_text("", encoding="utf8")
-    for position, ep in enumerate(episodes):
-        previous = f'{episodes[position-1]["slug"]}.html' if position else ""
-        following = f'{episodes[position+1]["slug"]}.html' if position + 1 < len(episodes) else ""
-        body = f'<article class="prose" data-title="{html.escape(ep["name"], quote=True)}">{ep["html"]}</article>'
-        page = document(ep["name"], body, asset_prefix="../", is_episode=True,
-                        previous=previous, following=following)
-        (DEST / "episodes" / f'{ep["slug"]}.html').write_text(page, encoding="utf8")
-    links = "\n".join(f'<li><a href="./episodes/{ep["slug"]}.html">{html.escape(ep["name"])}</a></li>' for ep in episodes)
-    home = f'''<section class="home"><p class="eyebrow">NOVEL READER</p><h1>{TITLE}</h1><p class="subheading">物語を読む</p><a class="continue" id="continue-reading" hidden>続きを読む →</a><section class="offline-library" aria-label="オフライン保存"><div><strong>オフライン読書</strong><p>開いた話は自動保存。電波がない場所でも読めます。</p></div><button type="button" id="save-all">全話を保存</button><p class="offline-progress" id="offline-progress" aria-live="polite">保存済みの話を確認しています</p></section><div class="toc-heading"><h2>目次</h2><span id="toc-count">{len(episodes)}話</span></div><label class="search-wrapper"><span aria-hidden="true">⌕</span><input id="toc-filter" type="search" placeholder="話数・タイトルで探す" aria-label="話数やタイトルで探す"></label><ol class="toc">{links}</ol></section>'''
-    (DEST / "index.html").write_text(document(TITLE, home, asset_prefix="./", is_episode=False), encoding="utf8")
-    # Keep app shell immediately usable offline; each opened episode is cached on demand.
+    (DEST / "icon.svg").write_text(
+        '''<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192"><rect width="192" height="192" rx="40" fill="#4d483d"/><path d="M38 50c25-11 44-4 58 7 14-11 33-18 58-7v94c-25-11-44-4-58 7-14-11-33-18-58-7z" stroke="#f5eddc" stroke-width="9" fill="none"/><path d="M96 57v95" stroke="#f5eddc" stroke-width="8"/></svg>''',
+        encoding="utf-8")
+    manifest = {
+        "name": "Velune", "short_name": "Velune", "lang": "ja",
+        "start_url": "./index.html", "scope": "./", "display": "standalone",
+        "background_color": "#f4edde", "theme_color": "#4d483d",
+        "icons": [{"src": "./icon.svg", "sizes": "any",
+                   "type": "image/svg+xml", "purpose": "any maskable"}]
+    }
+    (DEST / "manifest.webmanifest").write_text(
+        json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
+
+    chapter_paths = []
+    toc_paths = []
+    library_items = []
+    total_episodes = 0
+    for work in works:
+        work_id = work["id"]
+        episodes = work["episodes"]
+        title = work["title"]
+        book_dir = DEST / "works" / work_id
+        (book_dir / "episodes").mkdir(parents=True)
+        for position, ep in enumerate(episodes):
+            previous = f'{episodes[position - 1]["slug"]}.html' if position else ""
+            following = f'{episodes[position + 1]["slug"]}.html' if position + 1 < len(episodes) else ""
+            body = f'<article class="prose">{ep["html"]}</article>'
+            page = document(ep["name"], body, asset_prefix="../../../",
+                            is_episode=True, previous=previous, following=following)
+            dest = book_dir / "episodes" / f'{ep["slug"]}.html'
+            dest.write_text(page, encoding="utf-8")
+            chapter_paths.append("./" + dest.relative_to(DEST).as_posix())
+        links = "\n".join(
+            f'<li><a href="./episodes/{ep["slug"]}.html">{html.escape(ep["name"])}</a></li>'
+            for ep in episodes)
+        home = (f'<section class="home"><p class="eyebrow">VELUNE · NOVEL</p>'
+                f'<h1>{html.escape(title)}</h1><p class="subheading">{len(episodes)}話</p>'
+                '<p class="work-back"><a href="../../index.html">← 作品一覧へ戻る</a></p>'
+                '<a class="continue" id="continue-reading" hidden>続きを読む →</a>'
+                '<section class="offline-library" aria-label="オフライン保存">'
+                '<div><strong>オフライン読書</strong>'
+                '<p>開いた話は自動保存。通信のない場所でも読めます。</p></div>'
+                '<button type="button" id="save-all">全話を保存</button>'
+                '<p class="offline-progress" id="offline-progress" aria-live="polite">'
+                '保存済みの話を確認しています</p></section>'
+                f'<div class="toc-heading"><h2>目次</h2><span id="toc-count">{len(episodes)}話</span></div>'
+                '<label class="search-wrapper"><span aria-hidden="true">⌕</span>'
+                '<input id="toc-filter" type="search" placeholder="話数・タイトルで探す"'
+                ' aria-label="話数やタイトルで探す"></label>'
+                f'<ol class="toc">{links}</ol></section>')
+        (book_dir / "index.html").write_text(
+            document(title, home, asset_prefix="../../", is_episode=False), encoding="utf-8")
+        toc_paths.append(f"./works/{work_id}/index.html")
+        library_items.append(
+            '<li class="work-item"><a class="work-card" href="./works/' + work_id + '/index.html">'
+            '<span class="work-card-title">' + html.escape(title) + '</span>'
+            '<span class="work-card-count">' + str(len(episodes)) + '話 <span aria-hidden="true">›</span></span>'
+            '</a></li>')
+        total_episodes += len(episodes)
+
+    library = (f'<section class="home velune-library"><p class="eyebrow">YOUR STORY SHELF</p>'
+               f'<h1>Velune</h1><p class="subheading">物語を、好きな読み心地で。</p>'
+               f'<div class="toc-heading"><h2>作品一覧</h2><span>{len(works)}作品</span></div>'
+               '<ul class="work-list">' + "".join(library_items) + '</ul></section>')
+    (DEST / "index.html").write_text(
+        document("作品一覧", library, asset_prefix="./", is_episode=False), encoding="utf-8")
+
+    # All public files are explicitly generated. Raw Markdown and indexes stay private.
     shell_urls = ["./", "./index.html", "./assets/reader.css",
-                  "./assets/reader.js", "./manifest.webmanifest", "./icon.svg"]
-    episode_urls = ["./episodes/" + ep["slug"] + ".html" for ep in episodes]
+                  "./assets/reader.js", "./manifest.webmanifest", "./icon.svg", *toc_paths]
+    episode_urls = chapter_paths
     digest = hashlib.sha256(
-        "".join(p.read_text(encoding="utf8") for p in sorted(DEST.rglob("*")) if p.is_file()).encode()
+        "".join(p.read_text(encoding="utf-8") for p in sorted(DEST.rglob("*")) if p.is_file()).encode()
     ).hexdigest()[:16]
-    sw = r'''const SHELL = "revalna-shell-__BUILD__";
-const EPISODES = "revalna-episodes-v1";
+    sw = r'''const SHELL = "velune-shell-__BUILD__";
+const EPISODES = "velune-episodes-v1";
 const SHELL_FILES = __SHELL_FILES__;
 const EPISODE_FILES = __EPISODE_FILES__;
 const scope = self.registration.scope;
@@ -148,8 +232,8 @@ self.addEventListener("activate", event => {
   event.waitUntil((async () => {
     const names = await caches.keys();
     await Promise.all(names.filter(name =>
-      (name.startsWith("revalna-shell-") && name !== SHELL) ||
-      name.startsWith("revalna-reader-")).map(name => caches.delete(name)));
+      (name.startsWith("velune-shell-") && name !== SHELL) ||
+      name.startsWith("velune-reader-")).map(name => caches.delete(name)));
     const chapters = await caches.open(EPISODES);
     for (const request of await chapters.keys()) {
       if (!allowed.has(new URL(request.url).pathname)) await chapters.delete(request);
@@ -198,8 +282,10 @@ self.addEventListener("fetch", event => {
           .replace("__SHELL_FILES__", json.dumps(shell_urls, ensure_ascii=False))
           .replace("__EPISODE_FILES__", json.dumps(episode_urls, ensure_ascii=False)))
     (DEST / "sw.js").write_text(sw, encoding="utf8")
-    print(f"Built {len(episodes)} episodes from {SOURCE}. Published files: {len(shell_urls) + len(episode_urls) + 1}")
-    assert not any(p.name.casefold() == "index.md" for p in DEST.rglob("*"))
+    print(f"Built {len(works)} work(s), {total_episodes} episode(s)")
+    if any(path.name.casefold() == "index.md" or path.suffix == ".md"
+           for path in DEST.rglob("*") if path.is_file()):
+        raise AssertionError("Raw Markdown or INDEX.md in publication output")
 
 
 if __name__ == "__main__":
