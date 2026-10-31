@@ -72,6 +72,12 @@ def check_build(source: Path, dest: Path, chapters: dict[str, list[str]]) -> Non
     assert 'class="start-reading"' in home_html
     assert 'class="work-progress-track"' in home_html
     assert 'id="completed-count"' in home_html
+    # Reset must be explicit, confirmed and scoped to this novel.
+    assert 'id="reset-reading"' in home_html
+    assert 'id="reset-reading-dialog"' in home_html
+    assert 'id="confirm-reset-reading"' in home_html
+    assert 'id="cancel-reset-reading"' in home_html
+    assert '文字・背景の設定、他の作品の記録、オフライン保存はそのまま残ります。' in home_html
     assert 'class="episode-status" aria-label="読書状況"' in home_html
     assert 'class="toc work-episodes"' in home_html
     assert '<section class="offline-library"' not in home_html
@@ -119,6 +125,16 @@ def check_build(source: Path, dest: Path, chapters: dict[str, list[str]]) -> Non
     assert 'badge.textContent = "読了"' in script
     assert 'if (scrollY >= 140)' in script
     assert 'el("work-progress-bar")' in script
+    assert 'function resetWorkReadingStatus()' in script
+    assert 'function renderWorkReadingStatus()' in script
+    assert 'localStorage.removeItem(PROGRESS_KEY + path)' in script
+    assert 'localStorage.removeItem("velune-reader-scroll:" + path)' in script
+    assert 'episodePaths.includes(last.path)' in script
+    assert 'el("confirm-reset-reading")?.addEventListener("click"' in script
+    assert 'resetDialog?.addEventListener("close", releaseReaderScroll)' in script
+    assert 'renderWorkReadingStatus();' in script
+    assert 'localStorage.clear()' not in script
+    assert 'localStorage.removeItem(KEY)' not in script
     assert "readerWidth" not in script
     assert "if (scrollY >= 140) {" in script
     assert "save(LAST, {path, title})" in script
