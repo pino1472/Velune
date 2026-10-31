@@ -82,7 +82,7 @@ def check_build(source: Path, dest: Path, chapters: dict[str, list[str]]) -> Non
     assert 'id="toc-filter"' not in home_html
     assert 'class="open-episode-list"' in home_html
     assert '<div class="work-cover"' not in home_html
-    assert '<img src="../../icon.svg"' not in home_html
+    assert 'class="work-card-cover"' not in home_html
     assert 'placeholder="話数・タイトルで探す"' not in home_html
     # Description is explicitly public metadata, not canonical source docs.
     assert '<section class="work-synopsis"' in home_html
