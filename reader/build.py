@@ -153,6 +153,10 @@ def collect_works() -> list[dict]:
             raise ValueError(f"Invalid published work id in {manifest}")
         if not isinstance(title, str) or not title.strip():
             raise ValueError(f"Missing title in {manifest}")
+        description = data.get("description", "")
+        if not isinstance(description, str) or len(description) > 2000:
+            raise ValueError(f"Invalid description in {manifest}")
+        description = description.strip()
         prose = folder / "story" / "prose"
         if not prose.is_dir():
             raise ValueError(f"Missing story/prose directory: {folder}")
@@ -163,7 +167,8 @@ def collect_works() -> list[dict]:
             raise ValueError(f"Duplicate episode numbers in {folder}")
         if not episodes:
             raise ValueError(f"Published work has no prose episodes: {folder}")
-        works.append({"id": work_id, "title": title.strip(), "episodes": episodes})
+        works.append({"id": work_id, "title": title.strip(),
+                      "description": description, "episodes": episodes})
     if not works:
         raise SystemExit("No published work found under _source/works")
     return works
@@ -198,6 +203,7 @@ def build() -> None:
         work_id = work["id"]
         episodes = work["episodes"]
         title = work["title"]
+        description = work["description"]
         book_dir = DEST / "works" / work_id
         (book_dir / "episodes").mkdir(parents=True)
         for ep in episodes:
@@ -215,8 +221,15 @@ def build() -> None:
         links = "\n".join(
             f'<li><a href="./episodes/{ep["slug"]}.html">{html.escape(ep["name"])}</a></li>'
             for ep in episodes)
-        home = (f'<section class="home"><p class="eyebrow">VELUNE · NOVEL</p>'
+        overview = (
+            '<section class="work-overview" aria-labelledby="work-overview-title">'
+            '<h2 id="work-overview-title">あらすじ</h2>'
+            f'<p>{html.escape(description)}</p></section>'
+            if description else ""
+        )
+        home = (f'<section class="home work-index"><p class="eyebrow">VELUNE · NOVEL</p>'
                 f'<h1>{html.escape(title)}</h1><p class="subheading">{len(episodes)}話</p>'
+                f'{overview}'
                 '<p class="work-back"><a href="../../index.html">← 作品一覧へ戻る</a></p>'
                 '<a class="continue" id="continue-reading" hidden>続きを読む →</a>'
                 '<details class="offline-tools"><summary>オフライン保存'
@@ -226,9 +239,6 @@ def build() -> None:
                 '<p class="offline-progress" id="offline-progress" aria-live="polite">'
                 '保存状況を確認しています</p></div></details>'
                 f'<div class="toc-heading"><h2>目次</h2><span id="toc-count">{len(episodes)}話</span></div>'
-                '<label class="search-wrapper"><span aria-hidden="true">⌕</span>'
-                '<input id="toc-filter" type="search" placeholder="話数・タイトルで探す"'
-                ' aria-label="話数やタイトルで探す"></label>'
                 f'<ol class="toc">{links}</ol></section>')
         (book_dir / "index.html").write_text(
             document(title, home, asset_prefix="../../", is_episode=False), encoding="utf-8")

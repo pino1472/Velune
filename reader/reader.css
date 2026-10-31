@@ -128,12 +128,14 @@ button{cursor:pointer}
 /* Reader refresh: compact mobile chrome, genuine hidden state and in-chapter TOC. */
 [hidden]{display:none!important}
 .topbar-controls{gap:7px}
-.brand{flex:1;min-width:0}
+.brand{flex:0 1 auto;display:inline-flex;align-items:center;justify-content:flex-start;min-width:44px;min-height:44px;max-width:calc(100% - 132px);padding:0 6px 0 0;border-radius:9px;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.brand:active{background:color-mix(in srgb,var(--fg) 7%,transparent)}
+.topbar-controls{margin-left:auto}
 .toc-trigger{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;min-width:73px;padding:0 11px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--fg);font-weight:650;font-size:13px;white-space:nowrap}
 .toc-trigger:active{background:color-mix(in srgb,var(--fg) 8%,transparent)}
-#chapter-list{position:fixed;inset:0 0 0 auto;margin:0;height:100dvh;max-height:100dvh;width:min(430px,calc(100vw - 22px));max-width:100vw;border:0;border-left:1px solid var(--line);border-radius:18px 0 0 18px;padding:0;background:var(--bg);color:var(--fg);box-shadow:-10px 0 38px #0003;overflow:hidden}
+#chapter-list{position:fixed;inset:0;margin:auto;box-sizing:border-box;width:min(520px,calc(100vw - 24px));max-width:none;height:min(760px,calc(100dvh - 28px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));max-height:none;min-height:0;border:1px solid var(--line);border-radius:18px;padding:0;background:var(--bg);color:var(--fg);box-shadow:0 16px 60px #0005;overflow:hidden}
 #chapter-list::backdrop{background:#0008}
-.toc-panel{height:100%;display:flex;flex-direction:column;padding:calc(18px + env(safe-area-inset-top)) 19px calc(12px + env(safe-area-inset-bottom));overflow:hidden}
+.toc-panel{height:100%;min-height:0;display:flex;flex-direction:column;padding:18px 18px 14px;overflow:hidden}
 .toc-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding-bottom:14px}
 .toc-panel-head h2{font-size:17px;line-height:1.4;margin:3px 0 0;overflow-wrap:anywhere}
 .toc-panel-head .icon-btn{flex-shrink:0}
@@ -236,3 +238,20 @@ body.reader-overlay-open{position:fixed;left:0;right:0;width:100%;overflow:hidde
   #settings .settings-tabs{padding-top:4px;padding-bottom:4px}
   #settings .settings-footer{padding-top:6px;padding-bottom:6px}
 }
+
+/* Work overview: readable introductory paragraph, without a search form. */
+.work-index .subheading{margin-bottom:16px}
+.work-overview{max-width:660px;margin:0 auto 20px;padding:18px 20px;background:color-mix(in srgb,var(--fg) 3%,var(--bg));border-radius:14px;border:1px solid var(--line)}
+.work-overview h2{margin:0 0 9px;padding:0;border:0;font-size:13px;font-weight:750;color:var(--muted);letter-spacing:.04em}
+.work-overview p{margin:0;font-size:14px;line-height:1.85;letter-spacing:.01em;white-space:pre-line;overflow-wrap:anywhere}
+.work-index .work-back{margin-bottom:12px}
+.work-index .toc-heading{margin-top:20px}
+
+/* Chapter picker uses the same centered, height-bounded geometry as settings. */
+#chapter-list .toc-panel{min-height:0}
+#chapter-list .drawer-toc{min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-gutter:auto}
+#chapter-list .toc-search{min-height:44px}
+#chapter-list .toc-panel-back{flex:0 0 auto}
+@supports not (height:100dvh){#chapter-list{height:min(760px,calc(100vh - 28px))}}
+@media(max-height:540px){#chapter-list{height:calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom))}.toc-panel{padding-top:10px;padding-bottom:8px}}
+@media(max-width:374px){.work-overview{padding:15px}.work-overview p{font-size:13px}.topbar-controls{margin-left:auto}}
