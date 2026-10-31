@@ -65,12 +65,26 @@ def check_build(source: Path, dest: Path, chapters: dict[str, list[str]]) -> Non
     assert '<section class="offline-library"' not in home_html
     assert 'id="continue-reading" hidden' in home_html
     assert 'id="chapter-list"' not in home_html
+    # Settings should stay reachable even on short phone viewports.
+    assert '<div class="settings-shell">' in ep_html
+    assert 'id="settings-scroll"' in ep_html
+    assert 'role="tablist"' in ep_html
+    for panel in ("reading", "font", "theme"):
+        assert f'id="tab-{panel}" role="tab"' in ep_html
+        assert f'id="panel-{panel}" role="tabpanel"' in ep_html
+    assert 'id="panel-font" role="tabpanel" aria-labelledby="tab-font" hidden' in ep_html
+    assert 'id="panel-theme" role="tabpanel" aria-labelledby="tab-theme" hidden' in ep_html
+    assert 'id="done-settings"' in ep_html
+    assert 'id="close-settings"' in ep_html
     assert 'data-reading-preset="standard"' in ep_html
     assert 'id="font-size" type="range" min="14" max="28" value="17"' in ep_html
     assert 'id="line-height" type="range" min="1.4" max="2.6" value="1.8"' in ep_html
     assert 'id="reader-width" type="range" min="480" max="960" value="680"' in ep_html
     css = (dest / "assets" / "reader.css").read_text(encoding="utf-8")
     assert "[hidden]{display:none!important}" in css
+    assert ".settings-shell{display:flex;flex-direction:column" in css
+    assert ".settings-shell>.settings-scroll.settings-panel{flex:1 1 auto;min-height:0" in css
+    assert ".settings-footer{flex:0 0 auto" in css
     script = (dest / "assets" / "reader.js").read_text(encoding="utf-8")
     assert "velune-reader-last-v2" in script
     assert "if (scrollY >= 140) save(LAST" in script
