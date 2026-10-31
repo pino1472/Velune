@@ -211,10 +211,17 @@
     });
   });
 
+  const PROGRESS_KEY = "velune-reading-progress-v1:";
+  // Reading state is kept per chapter on this device. No private data is sent
+  // to the site, and simply opening a chapter does not count as reading.
   if (document.body.dataset.episode === "true") {
     const title = document.querySelector(".prose h1")?.textContent || document.title;
-    const positionKey = "velune-reader-scroll:" + location.pathname;
+    const path = location.pathname;
+    const positionKey = "velune-reader-scroll:" + path;
+    const progressKey = PROGRESS_KEY + path;
     const previous = Number(read(positionKey, 0));
+    let storedProgress = read(progressKey, null);
+    const previouslyFinished = !!(storedProgress && storedProgress.finished);
     if (Number.isFinite(previous) && previous > 0) {
       requestAnimationFrame(() => scrollTo({top: previous, behavior: "instant"}));
     }
@@ -222,13 +229,18 @@
     const updateProgress = () => {
       if (openOverlays > 0) { pending = false; return; }
       const denominator = document.documentElement.scrollHeight - innerHeight;
-      const progress = denominator > 0 ? Math.min(1, Math.max(0, scrollY / denominator)) : 1;
+      const fraction = denominator > 0 ? Math.min(1, Math.max(0, scrollY / denominator)) : 1;
       const progressTrack = el("progress-track");
-      if (progressTrack) progressTrack.style.width = (progress * 100).toFixed(2) + "%";
+      if (progressTrack) progressTrack.style.width = (fraction * 100).toFixed(2) + "%";
       save(positionKey, Math.round(scrollY));
-      // Visiting the first page is not reading progress. Resume appears only
-      // after an actual scroll into the chapter (including a restored position).
-      if (scrollY >= 140) save(LAST, {path: location.pathname, title});
+      if (scrollY >= 140) {
+        save(LAST, {path, title});
+        const percent = Math.round(fraction * 100);
+        const finished = previouslyFinished || !!storedProgress?.finished || fraction >= 0.94;
+        const highest = Math.max(1, percent, Number(storedProgress?.percent) || 0);
+        storedProgress = {percent: highest, finished};
+        save(progressKey, storedProgress);
+      }
       pending = false;
     };
     window.addEventListener("scroll", () => {
@@ -239,16 +251,54 @@
   } else {
     const last = read(LAST, null);
     const continuation = el("continue-reading");
-    const episodeRoot = new URL("episodes/", location.href).pathname;
-    if (last && typeof last.path === "string" && last.path.startsWith(episodeRoot) && /^\/[^?#]*\.html$/.test(last.path) && continuation) {
-      const match = Array.from(document.querySelectorAll(".toc a")).find(a => new URL(a.href).pathname === last.path);
-      if (match) {
-        continuation.href = last.path;
-        continuation.textContent = "続きを読む：" + match.textContent.trim() + " →";
-        continuation.hidden = false;
+    const entries = [...document.querySelectorAll(".work-episodes a")];
+    let finishedCount = 0, startedCount = 0;
+    for (const a of entries) {
+      const chapterPath = new URL(a.href, location.href).pathname;
+      const progress = read(PROGRESS_KEY + chapterPath, null);
+      const legacyScroll = Number(read("velune-reader-scroll:" + chapterPath, 0));
+      const finished = !!(progress && progress.finished);
+      const percent = progress && Number.isFinite(Number(progress.percent))
+        ? Math.min(100, Math.max(0, Math.round(Number(progress.percent)))) : 0;
+      const started = finished || percent > 0 || legacyScroll >= 140;
+      const badge = a.querySelector(".episode-status");
+      if (finished) {
+        finishedCount++;
+        a.closest("li")?.setAttribute("data-reading-state", "finished");
+        if (badge) badge.textContent = "読了";
+      } else if (started) {
+        startedCount++;
+        a.closest("li")?.setAttribute("data-reading-state", "in-progress");
+        if (badge) badge.textContent = percent ? "読書中 " + percent + "%" : "読書中";
+      } else {
+        a.closest("li")?.setAttribute("data-reading-state", "unread");
+        if (badge) badge.textContent = "未読";
       }
     }
-
+    const total = entries.length;
+    if (el("completed-count")) el("completed-count").textContent =
+      finishedCount + " / " + total + "話 読了";
+    const meter = document.querySelector(".work-progress-track");
+    if (meter) meter.setAttribute("aria-valuenow", String(finishedCount));
+    if (el("work-progress-bar")) el("work-progress-bar").style.width =
+      (total ? finishedCount / total * 100 : 0).toFixed(1) + "%";
+    if (el("reading-summary")) {
+      el("reading-summary").textContent = startedCount
+        ? startedCount + "話を読書中 · " + finishedCount + "話を読了"
+        : finishedCount ? finishedCount + "話を読了しました" : "まだ読んだ話がありません。";
+    }
+    if (continuation && last && typeof last.path === "string") {
+      const index = entries.findIndex(a => new URL(a.href, location.href).pathname === last.path);
+      if (index >= 0) {
+        const previousProgress = read(PROGRESS_KEY + last.path, null);
+        const target = previousProgress?.finished ? entries[index + 1] : entries[index];
+        if (target) {
+          continuation.href = target.href;
+          continuation.textContent = previousProgress?.finished ? "次の話から読む →" : "続きから読む →";
+          continuation.hidden = false;
+        }
+      }
+    }
   }
 
   const state = el("offline-state");
