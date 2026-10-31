@@ -12,12 +12,13 @@ mod = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(mod)
 
 
-def fixture(root: Path, name: str, title: str, *, published: bool = True) -> Path:
+def fixture(root: Path, name: str, title: str, *, published: bool = True,
+            description: str = "") -> Path:
     folder = root / name
     prose = folder / "story" / "prose"
     prose.mkdir(parents=True)
     (folder / "work.json").write_text(
-        json.dumps({"id": name, "title": title, "published": published}, ensure_ascii=False),
+        json.dumps({"id": name, "title": title, "published": published, "description": description}, ensure_ascii=False),
         encoding="utf-8")
     (folder / "canon").mkdir()
     (folder / "canon" / "SECRET.md").write_text("SECRET-CANON-MARKER", encoding="utf-8")
@@ -51,6 +52,7 @@ def check_build(source: Path, dest: Path, chapters: dict[str, list[str]]) -> Non
         for name in names:
             assert f"works/{work_id}/episodes/{name}" in sw
     assert "_template" not in sw
+    assert "toc-filter" not in (dest / "assets" / "reader.js").read_text(encoding="utf-8")
     assert "SECRET" not in root_html
     # Reader UX contract: use a chapter drawer rather than a sticky footer.
     ep_html = (dest / "works" / "revalna" / "episodes" /
@@ -65,6 +67,14 @@ def check_build(source: Path, dest: Path, chapters: dict[str, list[str]]) -> Non
     assert '<section class="offline-library"' not in home_html
     assert 'id="continue-reading" hidden' in home_html
     assert 'id="chapter-list"' not in home_html
+    assert 'id="toc-filter"' not in home_html
+    assert 'placeholder="話数・タイトルで探す"' not in home_html
+    # Description is explicitly public metadata, not canonical source docs.
+    if work_id == "revalna":
+        assert '<section class="work-overview"' in home_html
+        assert 'あらすじ' in home_html
+        assert '&lt;script&gt;' in home_html  # HTML-escaped user-supplied description
+        assert '<script>private</script>' not in home_html
     # Settings should stay reachable even on short phone viewports.
     assert '<div class="settings-shell">' in ep_html
     assert 'id="settings-scroll"' in ep_html
@@ -91,6 +101,8 @@ def check_build(source: Path, dest: Path, chapters: dict[str, list[str]]) -> Non
     # Dialogs must lock the underlying novel and restore the exact scroll position.
     assert "body.reader-overlay-open" in css
     assert "html.reader-overlay-open" in css
+    assert ".brand{flex:0 1 auto;display:inline-flex" in css
+    assert "#chapter-list{position:fixed;inset:0;margin:auto" in css
     assert "inset:0;margin:auto" in css
     assert "overscroll-behavior:contain" in css
     assert "function openReaderOverlay(element)" in script
@@ -106,7 +118,8 @@ def main() -> None:
         temp = Path(folder)
         source, dest = temp / "works", temp / "dist"
         source.mkdir()
-        revalna = fixture(source, "revalna", "リヴェルナ・オンライン")
+        revalna = fixture(source, "revalna", "リヴェルナ・オンライン",
+                          description="作品の紹介文 <script>private</script>")
         (revalna / "第001話.md").write_text(
             "---\ntype: episode_prose\nstatus: PENDING\nstory_adopted: false\n"
             "source_plot: secret/path\n---\n"
