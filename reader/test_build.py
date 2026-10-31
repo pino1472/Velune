@@ -88,6 +88,17 @@ def check_build(source: Path, dest: Path, chapters: dict[str, list[str]]) -> Non
     script = (dest / "assets" / "reader.js").read_text(encoding="utf-8")
     assert "velune-reader-last-v2" in script
     assert "if (scrollY >= 140) save(LAST" in script
+    # Dialogs must lock the underlying novel and restore the exact scroll position.
+    assert "body.reader-overlay-open" in css
+    assert "html.reader-overlay-open" in css
+    assert "inset:0;margin:auto" in css
+    assert "overscroll-behavior:contain" in css
+    assert "function openReaderOverlay(element)" in script
+    assert "window.scrollTo({top: lockedReaderY" in script
+    assert 'dialog?.addEventListener("close", releaseReaderScroll)' in script
+    assert 'tocDialog?.addEventListener("close", releaseReaderScroll)' in script
+    assert "if (openOverlays > 0)" in script
+
 
 
 def main() -> None:

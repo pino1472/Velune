@@ -87,7 +87,38 @@
     });
   }
   apply();
+  // Native dialogs enter the top layer, but mobile browsers can still scroll
+  // the underlying page while an inner settings pane is being dragged.
+  // Freeze the exact chapter position until all overlays are closed.
+  let lockedReaderY = 0;
+  let openOverlays = 0;
+  function releaseReaderScroll() {
+    if (openOverlays === 0) return;
+    openOverlays -= 1;
+    if (openOverlays !== 0) return;
+    document.body.classList.remove("reader-overlay-open");
+    document.documentElement.classList.remove("reader-overlay-open");
+    document.body.style.top = "";
+    window.scrollTo({top: lockedReaderY, behavior: "instant"});
+  }
+  function openReaderOverlay(element) {
+    if (!element || element.open) return;
+    if (openOverlays === 0) {
+      lockedReaderY = window.scrollY;
+      document.body.style.top = "-" + lockedReaderY + "px";
+      document.body.classList.add("reader-overlay-open");
+      document.documentElement.classList.add("reader-overlay-open");
+    }
+    openOverlays += 1;
+    try {
+      element.showModal();
+    } catch (error) {
+      releaseReaderScroll();
+      throw error;
+    }
+  }
   const dialog = el("settings");
+  dialog?.addEventListener("close", releaseReaderScroll);
   const settingsScroller = el("settings-scroll");
   const settingTabs = [...document.querySelectorAll("[data-settings-tab]")];
   function switchSettingsTab(name) {
@@ -119,7 +150,7 @@
   });
   el("open-settings")?.addEventListener("click", () => {
     switchSettingsTab("reading");
-    dialog?.showModal();
+    openReaderOverlay(dialog);
   });
   el("close-settings")?.addEventListener("click", () => dialog?.close());
   el("done-settings")?.addEventListener("click", () => dialog?.close());
@@ -163,8 +194,9 @@
   });
 
   const tocDialog = el("chapter-list");
+  tocDialog?.addEventListener("close", releaseReaderScroll);
   el("open-toc")?.addEventListener("click", () => {
-    tocDialog?.showModal();
+    openReaderOverlay(tocDialog);
     const active = tocDialog?.querySelector('[aria-current="page"]');
     if (active) requestAnimationFrame(() => active.scrollIntoView({block: "center"}));
   });
@@ -188,6 +220,7 @@
     }
     let pending = false;
     const updateProgress = () => {
+      if (openOverlays > 0) { pending = false; return; }
       const denominator = document.documentElement.scrollHeight - innerHeight;
       const progress = denominator > 0 ? Math.min(1, Math.max(0, scrollY / denominator)) : 1;
       const progressTrack = el("progress-track");
