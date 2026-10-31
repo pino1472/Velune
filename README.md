@@ -1,72 +1,35 @@
 # Velune
 
-Lythiaで管理する複数の自作小説を、スマートフォンで読むためのGitHub Pages / PWAリーダーです。
+**物語を、好きな読み心地で。**
 
-## 仕組み
+Veluneは、小説をスマートフォンやパソコンで快適に読むためのWebリーダーです。文字や背景の見た目を好みに合わせて調整し、読書の続きを楽しめます。
 
-- **Public:** `pino1472/Velune` には読書画面とビルドプログラムのみ配置します。
-- **Private:** `pino1472/Lythia` を複数作品の原稿集として使用します。
-- `Lythia/works/<work-id>/work.json` の `published: true` の作品のみ公開します。
-- `works/_template/` や `_` 始まりの作品ディレクトリは無条件に除外します。
-- 各作品の本文は `works/<work-id>/story/prose/第[数字]話.md` に統一し、件数は固定しません。先頭のYAML管理情報とINDEXは出力せず、最初のH1から下だけを表示します。
-- 作品一覧 → 作品の目次 → 各話という導線です。
-- 複数作品で共通の8書体・14色＋自由色・文字サイズ・行間・読書位置・オフライン保存に対応します。
-- Actionsは手動実行のみ。Lythiaのコミットでは自動公開しません。
+**[Veluneで読む](https://pino1472.github.io/Velune/)**
 
-## 構成の移行（重要）
+## 使い方
 
-Lythiaへの改名と、`works/revalna/`・`works/_template/`を含む構成移行が完了してから公開ビルドを実行してください。
+1. **作品を選ぶ** — 作品一覧から読みたい小説を開きます。
+2. **話を選ぶ** — 目次から各話へ移動します。話数やタイトルで目次を検索することもできます。
+3. **表示を調整する** — 画面上部の「Aa」からフォント、背景色、文字サイズ、行間、本文幅を変更できます。
+4. **続きを読む** — 読書位置がブラウザに記録され、前回読んでいた話に戻れます。
 
-## 初回設定（GitHub UIで行う操作）
+## 主な機能
 
-### 1. 非公開原稿を読むためのトークン
+- 作品別の目次、タイトル検索、前後の話への移動
+- **8種類のフォント**の選択（Meiryo UIなど）
+- **14種類の背景色**と自由なカラー設定
+- 文字サイズ・行間・本文幅の調整
+- 読書位置の記録、進捗表示
+- 閲覧済みの話の自動保存と、作品ごとの「全話を保存」によるオフライン読書
 
-GitHubアカウントで **Fine-grained personal access token** を発行します。
+## オフラインで読む
 
-- Resource owner: `pino1472`
-- Repository access: **Only select repositories** → `Lythia` のみ
-- Repository permissions: **Contents: Read-only**（Metadata: Read-only は自動付与）
-- 有効期限は適切な期間を設定
+オンラインの状態で読みたい作品の目次を開き、**「全話を保存」**を押してください。保存状況が表示されます。
 
-作成したトークンは、このチャットやソースコードに貼らないでください。
+一度開いた話も自動的に保存されます。保存後は、対応ブラウザで通信のない場所でも読むことができます。
 
-Veluneの **Settings → Secrets and variables → Actions → New repository secret** で以下を登録します。
+> ブラウザや端末の設定、空き容量などによって保存データが削除される場合があります。外出前に機内モードで読めるか確認してください。
 
-- Name: **`LYTHIA_READ_TOKEN`**（従来の `REVALNA_READ_TOKEN` も使用可能）
-- Secret: 発行したトークン
+## 表示について
 
-公開リポジトリ内のコードにトークンを書かず、Actions実行中だけ認証に使います。
-
-### 2. Pagesの有効化
-
-Veluneの **Settings → Pages → Build and deployment → Source** を **GitHub Actions** に設定します。
-
-### 3. 公開
-
-Veluneの **Actions → Publish Velune reader → Run workflow** を選びます。
-
-原稿のコミット時には自動起動しません。公開したい時だけ操作します。
-
-成功後の標準URLは **https://pino1472.github.io/Velune/** です。実際の公開URLはPages設定とActions実行結果を確認してください。
-
-## 開発時のテスト
-
-```sh
-python -m pip install -r requirements.txt
-python reader/test_build.py
-```
-
-ローカルで原稿を取り込む場合、`_source/works/<work-id>/story/prose/` にファイルを置いて `python reader/build.py` を実行します。生成物は `dist/` です。
-
-## 安全性とオフライン
-
-- GitHub Pagesでは **生成した小説本文は一般公開** されます（元リポジトリはPrivateのまま）。
-- Actionsは `_source` から本文だけスパースチェックアウトします。公開するのは `dist/` のみです。
-- 最初にサイトをオンラインで開くと読書画面をキャッシュし、開いた話は自動保存します。目次の「全話を保存」も使えます。
-- オフラインキャッシュはブラウザのストレージ管理で削除される場合があります。旅行前などに保存件数と機内モードで動作確認してください。
-- 未検証のまま「公開済み」「オフライン動作保証」とはみなしません。
-
-公式参考資料:
-- https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site
-- https://github.com/actions/checkout
-- https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions
+利用できるフォントは端末によって異なります。選択したフォントが端末にない場合は、別のフォントで表示されます。
