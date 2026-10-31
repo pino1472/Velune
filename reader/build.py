@@ -23,7 +23,7 @@ MARKDOWN = MarkdownIt("commonmark", {"html": False, "linkify": False}).enable("t
 # CommonMark otherwise parses it as nested block quotes and hides both ">".
 # Keep Markdown parsing enabled for genuine "> " quotes, headings and links.
 # Do not alter characters in fenced/indented code blocks.
-BBS_REFERENCE = re.compile(r"^([ \t]{0,3})(>{2,})")
+BBS_REFERENCE = re.compile(r"^([ \t]{0,3})(>>)(?=[0-9])")
 FENCE_OPEN = re.compile(r"^ {0,3}(`{3,}|~{3,})")
 
 
@@ -50,7 +50,7 @@ def preserve_forum_reply_markers(source: str) -> str:
             continue
         match = BBS_REFERENCE.match(line)
         if match:
-            # Backslash escapes the quote markers, while Markdown still handles
+            # Only numeric forum references are escaped; real nested quotes stay Markdown.\n            # Backslash escapes the quote markers, while Markdown still handles
             # two trailing spaces (hard breaks) and all non-forum markup.
             line = (match.group(1) + "\\>" * len(match.group(2)) +
                     line[match.end():])
