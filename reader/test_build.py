@@ -64,13 +64,21 @@ def check_build(source: Path, dest: Path, chapters: dict[str, list[str]]) -> Non
     assert '<nav class="chapter-nav"' not in ep_html
     home_html = (dest / "works" / "revalna" / "index.html").read_text(encoding="utf-8")
     assert '<details class="offline-tools">' in home_html
+    assert 'class="work-hero"' in home_html
+    assert 'class="start-reading"' in home_html
+    assert 'class="work-progress-track"' in home_html
+    assert 'id="completed-count"' in home_html
+    assert 'class="episode-status" aria-label="読書状況"' in home_html
+    assert 'class="work-episodes"' in home_html
     assert '<section class="offline-library"' not in home_html
     assert 'id="continue-reading" hidden' in home_html
+    assert '<img src="../../icon.svg"' in home_html
+    assert (dest / "icon.svg").exists()
     assert 'id="chapter-list"' not in home_html
     assert 'id="toc-filter"' not in home_html
     assert 'placeholder="話数・タイトルで探す"' not in home_html
     # Description is explicitly public metadata, not canonical source docs.
-    assert '<section class="work-overview"' in home_html
+    assert '<section class="work-synopsis"' in home_html
     assert 'あらすじ' in home_html
     assert '&lt;script&gt;' in home_html  # HTML-escaped user-supplied description
     assert '<script>private</script>' not in home_html
@@ -96,11 +104,18 @@ def check_build(source: Path, dest: Path, chapters: dict[str, list[str]]) -> Non
     assert ".settings-footer{flex:0 0 auto" in css
     script = (dest / "assets" / "reader.js").read_text(encoding="utf-8")
     assert "velune-reader-last-v2" in script
+    assert 'const PROGRESS_KEY = "velune-reading-progress-v1:"' in script
+    assert 'badge.textContent = "読了"' in script
+    assert 'if (scrollY >= 140)' in script
+    assert 'el("work-progress-bar")' in script
     assert "if (scrollY >= 140) save(LAST" in script
     # Dialogs must lock the underlying novel and restore the exact scroll position.
     assert "body.reader-overlay-open" in css
     assert "html.reader-overlay-open" in css
     assert ".brand{flex:0 1 auto;display:inline-flex" in css
+    assert ".work-hero{" in css
+    assert ".work-episodes .episode-status{" in css
+    assert ".brand img{" in css
     assert "#chapter-list{position:fixed;inset:0;margin:auto" in css
     assert "inset:0;margin:auto" in css
     assert "overscroll-behavior:contain" in css
