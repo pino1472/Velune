@@ -108,7 +108,8 @@ def check_build(source: Path, dest: Path, chapters: dict[str, list[str]]) -> Non
     assert 'badge.textContent = "読了"' in script
     assert 'if (scrollY >= 140)' in script
     assert 'el("work-progress-bar")' in script
-    assert "if (scrollY >= 140) save(LAST" in script
+    assert "if (scrollY >= 140) {" in script
+    assert "save(LAST, {path, title})" in script
     # Dialogs must lock the underlying novel and restore the exact scroll position.
     assert "body.reader-overlay-open" in css
     assert "html.reader-overlay-open" in css
