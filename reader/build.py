@@ -60,8 +60,8 @@ def document(title: str, body: str, *, asset_prefix: str, is_episode: bool, toc_
         </div></fieldset>
 <label class="setting-range">文字サイズ <output id="font-value">17px</output><input id="font-size" type="range" min="14" max="28" value="17" step="1"></label>
         <label class="setting-range">行間 <output id="line-value">1.8</output><input id="line-height" type="range" min="1.4" max="2.6" value="1.8" step="0.1"></label>
-        <label class="setting-range">本文の幅 <output id="width-value">680px</output><input id="reader-width" type="range" min="480" max="960" value="680" step="40"></label>
-            <p class="settings-width-help">本文幅は大きな画面での最大幅です。スマートフォンでは画面幅に合わせます。</p>
+
+
 <div class="settings-preview" aria-label="本文プレビュー"><span>プレビュー</span><p>　物語は、ここから始まる。</p><p>　お気に入りの文字と色で、続きを読もう。</p></div>
           </section>
           <section class="settings-tab-panel" id="panel-font" role="tabpanel" aria-labelledby="tab-font" hidden>
@@ -103,16 +103,13 @@ def document(title: str, body: str, *, asset_prefix: str, is_episode: bool, toc_
           <button id="done-settings" class="settings-done" type="button">読書に戻る</button>
         </footer>
       </div></dialog>'''
-    toc_button = ('<button id="open-toc" type="button" class="toc-trigger"'
-                  ' aria-haspopup="dialog" aria-controls="chapter-list">☰ <span>目次</span></button>'
+    toc_button = ('<a id="open-toc" class="toc-trigger" href="../index.html"'
+                  ' aria-haspopup="dialog" aria-controls="chapter-list">☰ <span>目次</span></a>'
                   if is_episode else "")
     toc_dialog = (f'<dialog id="chapter-list" aria-label="作品の目次">'
                   f'<div class="toc-panel"><div class="toc-panel-head">'
                   f'<div><p class="settings-eyebrow">CHAPTERS</p><h2>{html.escape(work_title)}</h2></div>'
                   '<button id="close-toc" type="button" class="icon-btn" aria-label="目次を閉じる">×</button></div>'
-                  '<label class="search-wrapper toc-search"><span aria-hidden="true">⌕</span>'
-                  '<input id="chapter-filter" type="search" placeholder="話数・タイトルで検索"'
-                  ' aria-label="話数やタイトルで検索"></label>'
                   f'<ol class="toc drawer-toc">{toc_items}</ol>'
                   '<p class="toc-panel-back"><a href="../index.html">作品の目次ページへ</a></p></div></dialog>'
                   if is_episode else "")
@@ -222,26 +219,38 @@ def build() -> None:
             '<span class="episode-status" aria-label="読書状況">未読</span>'
             '</a></li>'
             for ep in episodes)
-        overview = (
-            '<section class="work-synopsis" aria-labelledby="work-overview-title">'
-            '<h2 id="work-overview-title">あらすじ</h2>'
-            f'<p>{html.escape(description)}</p></section>'
-            if description else ""
-        )
-        cover = ('<div class="work-cover" aria-hidden="true">'
-                 '<img src="../../icon.svg" alt="" width="86" height="86">'
-                 '<span>VELUNE STORIES</span></div>')
+        # Native details lets visitors expand long descriptions without JavaScript.
+        if description and len(description) > 160:
+            excerpt = html.escape(description[:156].rstrip() + "…")
+            overview = (
+                '<section class="work-synopsis" aria-labelledby="work-overview-title">'
+                '<h2 id="work-overview-title">あらすじ</h2>'
+                '<details class="synopsis-expander"><summary>'
+                f'<span class="synopsis-excerpt">{excerpt}</span>'
+                '<span class="synopsis-toggle">すべて表示 ↓</span></summary>'
+                f'<p class="synopsis-full">{html.escape(description)}</p>'
+                '</details></section>'
+            )
+        elif description:
+            overview = (
+                '<section class="work-synopsis" aria-labelledby="work-overview-title">'
+                '<h2 id="work-overview-title">あらすじ</h2>'
+                f'<p>{html.escape(description)}</p></section>'
+            )
+        else:
+            overview = ""
         first_href = './episodes/' + episodes[0]["slug"] + '.html'
         hero = (
             '<section class="work-hero" aria-label="作品情報">'
-            '<div class="work-hero-main">' + cover +
+            '<div class="work-hero-main">' +
             '<div class="work-hero-info"><p class="work-category">WEB NOVEL</p>'
             f'<h1>{html.escape(title)}</h1>'
             f'<div class="work-meta"><span>全{len(episodes)}話</span>'
-            '<span>いつでも読める</span></div></div></div>'
+            '</div></div></div>'
             '<div class="work-action-row">'
             f'<a class="start-reading" href="{first_href}">第1話から読む <span aria-hidden="true">→</span></a>'
             '<a class="continue" id="continue-reading" hidden>続きを読む <span aria-hidden="true">→</span></a>'
+            '<a class="open-episode-list" href="#episode-list-title">エピソード一覧を見る ↓</a>'
             '</div></section>'
         )
         home = (
@@ -275,7 +284,7 @@ def build() -> None:
         teaser = html.escape(description[:85] + ("…" if len(description) > 85 else ""))
         library_items.append(
             '<li class="work-item"><a class="work-card" href="./works/' + work_id + '/index.html">'
-            '<span class="work-card-cover" aria-hidden="true"><img src="./icon.svg" alt="" width="46" height="46"></span>'
+            
             '<span class="work-card-details"><strong class="work-card-title">' + html.escape(title) + '</strong>'
             '<span class="work-card-teaser">' + teaser + '</span>'
             '<span class="work-card-count">全' + str(len(episodes)) + '話</span></span>'
@@ -337,10 +346,7 @@ self.addEventListener("fetch", event => {
         else if (response.status === 404 || response.status === 410) await cache.delete(req);
         return response;
       });
-      if (cached && req.cache !== "reload") {
-        event.waitUntil(update.catch(() => {}));
-        return cached;
-      }
+      // Online users always receive the latest chapter/TOC; cache remains for offline use.
       try { return await update; }
       catch {
         return cached || new Response(offlinePage, {status: 503, headers: {"Content-Type": "text/html; charset=utf-8"}});
@@ -352,12 +358,21 @@ self.addEventListener("fetch", event => {
     const cache = await caches.open(SHELL);
     const cached = await cache.match(req, {ignoreSearch: true});
     const root = new URL(scope);
-    if (cached) return cached;
-    if (url.pathname === root.pathname && req.mode === "navigate") {
-      const index = await cache.match(new URL("./index.html", scope));
-      if (index) return index;
+    // Network-first for the shell too: prevent first visits from seeing stale menus.
+    try {
+      const fresh = await fetch(req);
+      if (fresh.ok && (cached || SHELL_FILES.some(path => new URL(path, scope).pathname === url.pathname))) {
+        await cache.put(req, fresh.clone()).catch(() => {});
+      }
+      return fresh;
+    } catch {
+      if (cached) return cached;
+      if (url.pathname === root.pathname && req.mode === "navigate") {
+        const index = await cache.match(new URL("./index.html", scope));
+        if (index) return index;
+      }
+      return Response.error();
     }
-    return fetch(req);
   })());
 });
 '''
