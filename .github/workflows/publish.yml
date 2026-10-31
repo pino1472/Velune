@@ -33,7 +33,7 @@ jobs:
             exit 1
           fi
 
-      - name: Checkout private prose only
+      - name: Checkout private work library
         uses: actions/checkout@v4
         with:
           repository: pino1472/Revalna
@@ -42,7 +42,7 @@ jobs:
           token: ${{ secrets.REVALNA_READ_TOKEN }}
           persist-credentials: false
           sparse-checkout: |
-            story/prose
+            works
           sparse-checkout-cone-mode: true
 
       - name: Set up Python
@@ -59,11 +59,12 @@ jobs:
           python reader/test_build.py
           node --check reader/reader.js
 
-      - name: Generate all current episodes
+      - name: Generate all published works and their episodes
         run: |
           python reader/build.py
           test -f dist/index.html
           test -f dist/sw.js
+          test -f dist/works/revalna/index.html
           if find dist -type f \( -name '*.md' -o -name '*.yml' -o -name '*.yaml' \) | grep -q .; then
             echo "::error::Unexpected source or metadata file in public output."
             exit 1
