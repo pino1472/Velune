@@ -201,12 +201,6 @@
   tocDialog?.addEventListener("click", event => {
     if (event.target === tocDialog) tocDialog.close();
   });
-  el("chapter-filter")?.addEventListener("input", event => {
-    const needle = event.currentTarget.value.trim().normalize("NFKC").toLowerCase();
-    tocDialog.querySelectorAll(".drawer-toc li").forEach(item => {
-      item.hidden = !item.textContent.normalize("NFKC").toLowerCase().includes(needle);
-    });
-  });
 
   const PROGRESS_KEY = "velune-reading-progress-v1:";
   // Reading state is kept per chapter on this device. No private data is sent
