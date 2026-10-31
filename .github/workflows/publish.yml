@@ -26,10 +26,10 @@ jobs:
 
       - name: Check private repository token
         env:
-          SOURCE_TOKEN: ${{ secrets.REVALNA_READ_TOKEN }}
+          SOURCE_TOKEN: ${{ secrets.LYTHIA_READ_TOKEN || secrets.REVALNA_READ_TOKEN }}
         run: |
           if [ -z "$SOURCE_TOKEN" ]; then
-            echo "::error::Set the REVALNA_READ_TOKEN Actions secret first."
+            echo "::error::Set LYTHIA_READ_TOKEN (or legacy REVALNA_READ_TOKEN) as an Actions secret first."
             exit 1
           fi
 
@@ -39,7 +39,7 @@ jobs:
           repository: pino1472/Lythia
           ref: main
           path: _source
-          token: ${{ secrets.REVALNA_READ_TOKEN }}
+          token: ${{ secrets.LYTHIA_READ_TOKEN || secrets.REVALNA_READ_TOKEN }}
           persist-credentials: false
           sparse-checkout: |
             works
