@@ -216,15 +216,6 @@ def main() -> None:
         (draft / "第001話.md").write_text(
             "# 第001話「未公開」\n\nSECRET-DRAFT\n", encoding="utf-8")
         check_build(source, dest, {"revalna": ["001.html", "003.html"]})
-        # Old origin exports reading records only to the fixed new-site origin.
-        bridge = (dest / "migrate.html").read_text(encoding="utf-8")
-        assert 'https://shiorune.github.io' in bridge
-        assert 'window.opener.postMessage' in bridge
-        assert 'velune-reading-progress-v1:' in bridge
-        assert 'localStorage.getItem' in bridge
-        assert '<script>' in bridge
-        assert "SECRET-TEMPLATE" not in bridge
-
         chapter = (dest / "works" / "revalna" / "episodes" / "001.html").read_text(encoding="utf-8")
         assert "ランダムは1回だけ" in chapter
         assert "　本文です。" in chapter

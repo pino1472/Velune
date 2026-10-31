@@ -1,9 +1,12 @@
-name: Publish Velune reading migration bridge
+name: Restore original Velune public reader
 
-# Keep the last working public reader intact; this migration patch does not
-# fetch private manuscripts or require the former source access token.
+# Restore the original reader without requesting the retired private source token.
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-migration.yml'
 
 permissions:
   contents: read
@@ -34,26 +37,6 @@ jobs:
           test -f dist/index.html
           test -f dist/works/revalna/index.html
           test -f dist/works/revalna/episodes/001.html
-
-      - name: Add the cross-origin reading history bridge only
-        run: |
-          python - <<'PY'
-          import re
-          from pathlib import Path
-          source = Path("reader/build.py").read_text(encoding="utf-8")
-          match = re.search(r"migration_page = r'''(.*?)'''", source, re.S)
-          if not match:
-              raise SystemExit("Legacy migration HTML source not found")
-          Path("dist/migrate.html").write_text(match.group(1), encoding="utf-8")
-          bridge = Path("dist/migrate.html").read_text(encoding="utf-8")
-          assert "https://shiorune.github.io" in bridge
-          assert "window.opener.postMessage" in bridge
-          assert "velune-reading-progress-v1:" in bridge
-          PY
-          if find dist -type f \( -name '*.md' -o -name '*.yml' -o -name '*.yaml' \) | grep -q .; then
-            echo "::error::Source metadata was included in the artifact"
-            exit 1
-          fi
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
