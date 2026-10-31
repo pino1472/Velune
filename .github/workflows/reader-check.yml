@@ -21,3 +21,4 @@ jobs:
       - run: python -m py_compile reader/build.py reader/test_build.py
       - run: python reader/test_build.py
       - run: node --check reader/reader.js
+      - run: node reader/test_reset.js
