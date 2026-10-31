@@ -255,3 +255,99 @@ body.reader-overlay-open{position:fixed;left:0;right:0;width:100%;overflow:hidde
 @supports not (height:100dvh){#chapter-list{height:min(760px,calc(100vh - 28px))}}
 @media(max-height:540px){#chapter-list{height:calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom))}.toc-panel{padding-top:10px;padding-bottom:8px}}
 @media(max-width:374px){.work-overview{padding:15px}.work-overview p{font-size:13px}.topbar-controls{margin-left:auto}}
+
+
+/* Velune brand mark: compact, explicit 44 px touch target. */
+.brand{display:inline-flex;align-items:center;gap:8px;flex:0 0 auto;min-height:44px;min-width:44px;max-width:none;padding:4px 6px 4px 0;font-family:Georgia,"Yu Mincho",serif;font-size:17px;font-weight:700;letter-spacing:-.015em}
+.brand img{display:block;width:28px;height:28px;border-radius:8px;flex:0 0 auto}
+.brand span{display:inline-block}
+@media(max-width:374px){.brand{font-size:15px;gap:6px}.brand img{width:25px;height:25px}}
+
+/* Editorial work detail, inspired by familiar Japanese web-novel information hierarchy. */
+.work-detail{width:min(100%,810px);margin:0 auto;font-family:var(--ui-font)}
+.work-breadcrumb{display:flex;align-items:center;gap:8px;margin:0 0 18px;font-size:12px;color:var(--muted);line-height:1.6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.work-breadcrumb a{flex-shrink:0;text-decoration:underline;text-underline-offset:3px}
+.work-breadcrumb span[aria-current]{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.work-hero{position:relative;overflow:hidden;padding:28px;border-radius:18px;background:linear-gradient(130deg,#223949 0%,#354f5e 66%,#53626b 100%);color:#fcf7ec;box-shadow:0 9px 30px #162a3620}
+.work-hero::after{content:"";position:absolute;pointer-events:none;right:-45px;top:-90px;width:245px;height:245px;border-radius:50%;border:1px solid #eac89e2b;box-shadow:0 0 0 45px #eac89e0a,0 0 0 95px #eac89e06}
+.work-hero-main{position:relative;z-index:1;display:flex;align-items:center;gap:22px}
+.work-cover{width:126px;height:162px;flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:11px;background:linear-gradient(145deg,#ebd9bf,#c9b091);border:1px solid #fff8de85;border-radius:8px;box-shadow:4px 9px 18px #0004;color:#2d3d45}
+.work-cover img{display:block;width:84px;height:84px;border-radius:20px;filter:drop-shadow(0 3px 4px #192f3840)}
+.work-cover span{font-size:9px;letter-spacing:.22em;font-family:Georgia,serif}
+.work-hero-info{min-width:0}
+.work-category{display:inline-block;padding:5px 9px;border:1px solid #e7cfaa70;border-radius:6px;font-size:10px;letter-spacing:.19em;color:#f0d5af;margin:0 0 17px}
+.work-hero h1{margin:0 0 19px;line-height:1.45;font-size:clamp(22px,4.7vw,31px);font-family:Georgia,"Yu Mincho","Hiragino Mincho ProN",serif;font-weight:750;letter-spacing:.015em;overflow-wrap:anywhere}
+.work-meta{display:flex;flex-wrap:wrap;align-items:center;gap:12px;color:#e5dcd1;font-size:12px}
+.work-meta span+span::before{content:"•";margin-right:12px;color:#c4a679}
+.work-action-row{position:relative;z-index:1;display:flex;gap:10px;align-items:stretch;margin:23px 0 0;flex-wrap:wrap}
+.work-action-row a{display:inline-flex;align-items:center;justify-content:center;gap:12px;min-height:48px;border-radius:10px;padding:12px 19px;font-size:14px;font-weight:750;line-height:1.4;max-width:100%;overflow-wrap:anywhere;touch-action:manipulation}
+.work-action-row .start-reading{background:#e3bd84;color:#233441;box-shadow:0 3px 12px #0002}
+.work-action-row .start-reading:active{background:#f4d5a7}
+.work-action-row .continue{display:inline-flex;margin:0;background:#ffffff15;color:#fff9ef;border:1px solid #f8eddb70}
+.work-action-row a[hidden]{display:none!important}
+.work-synopsis{padding:26px 1px 22px;border-bottom:1px solid var(--line)}
+.work-synopsis h2{font-size:18px;line-height:1.4;font-weight:750;margin:0 0 12px;letter-spacing:.015em}
+.work-synopsis p{margin:0;line-height:1.95;font-size:14px;color:var(--fg);white-space:pre-line;overflow-wrap:anywhere;letter-spacing:.015em}
+.work-progress{padding:22px 20px 18px;margin:19px 0 24px;border:1px solid color-mix(in srgb,var(--accent) 34%,var(--line));border-radius:13px;background:color-mix(in srgb,var(--accent) 6%,var(--bg))}
+.work-progress-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;line-height:1.5}
+.work-progress-heading strong{font-size:14px;font-weight:750}
+.work-progress-heading span{font-size:13px;color:var(--accent);font-variant-numeric:tabular-nums}
+.work-progress-track{height:7px;border-radius:99px;background:color-mix(in srgb,var(--fg) 13%,var(--bg));overflow:hidden;margin:14px 0 8px}
+.work-progress-track>span{display:block;height:100%;width:0;background:linear-gradient(90deg,#bf9869,#d9b985);border-radius:99px;transition:width .2s ease}
+.work-progress>p{margin:0;font-size:12px;color:var(--muted);line-height:1.6}
+.work-episodes-section{margin-top:22px}
+.work-episode-heading{display:flex;justify-content:space-between;align-items:end;gap:12px;border-bottom:2px solid var(--accent);padding:0 0 12px}
+.work-episode-heading>div>p{font-size:10px;letter-spacing:.18em;color:var(--muted);margin:0 0 6px}
+.work-episode-heading h2{font-size:20px;line-height:1.4;margin:0;font-weight:750}
+.work-episode-heading>span{font-size:12px;color:var(--muted);padding-bottom:3px;font-variant-numeric:tabular-nums}
+.work-episodes-section .offline-tools{margin:0 0 6px;border-top:0;border-bottom:1px solid var(--line)}
+.work-episodes-section .offline-tools summary{min-height:45px}
+.work-episodes{margin:0}
+.work-episodes li{border-bottom:1px solid var(--line)}
+.work-episodes li a{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:63px;padding:12px 12px;border-radius:8px;font-size:14px;line-height:1.5;transition:background-color .1s}
+.work-episodes li a:hover,.work-episodes li a:focus-visible{background:color-mix(in srgb,var(--accent) 7%,var(--bg))}
+.work-episodes li a::after{display:none}
+.work-episodes .episode-title{flex:1;min-width:0;overflow-wrap:anywhere}
+.work-episodes .episode-status{display:inline-flex;align-items:center;justify-content:center;min-width:52px;flex:0 0 auto;font-size:11px;color:var(--muted);font-weight:500;white-space:nowrap}
+.work-episodes li[data-reading-state="in-progress"] a{background:color-mix(in srgb,var(--accent) 7%,var(--bg))}
+.work-episodes li[data-reading-state="in-progress"] .episode-status{color:var(--accent);font-weight:750}
+.work-episodes li[data-reading-state="finished"] .episode-title{color:var(--muted)}
+.work-episodes li[data-reading-state="finished"] .episode-status{color:#7b9778;font-weight:750}
+.work-episodes li[data-reading-state="finished"] .episode-status::before{content:"✓";margin-right:4px}
+@media(max-width:540px){
+  .work-hero{padding:19px 17px 18px;border-radius:14px}
+  .work-hero-main{gap:14px;align-items:flex-start}
+  .work-cover{width:88px;height:119px;gap:7px}
+  .work-cover img{width:58px;height:58px;border-radius:14px}
+  .work-cover span{font-size:6px;letter-spacing:.12em}
+  .work-category{font-size:9px;margin:0 0 9px}
+  .work-hero h1{font-size:clamp(18px,5.2vw,23px);margin-bottom:11px}
+  .work-meta{font-size:11px;gap:7px}
+  .work-meta span+span::before{margin-right:7px}
+  .work-action-row{margin-top:18px}
+  .work-action-row a{flex:1 1 155px;padding:11px 12px;font-size:13px;min-height:46px}
+  .work-synopsis{padding-top:22px}
+  .work-progress{padding:17px 15px;margin:18px 0 20px}
+  .work-episodes li a{padding-left:5px;padding-right:5px}
+}
+
+/* A richer library with small graphic cover thumbnails and short synopses. */
+.velune-library{max-width:810px}
+.library-intro{border-radius:16px;padding:28px 20px;margin:0 0 30px;background:linear-gradient(140deg,#e1d4c1,#f6efe2);color:#293f49;box-shadow:0 4px 20px #0000000b}
+.library-intro .eyebrow{font-size:10px;letter-spacing:.18em;margin:0 0 8px;color:#766348}
+.library-intro h1{font-size:34px;font-family:Georgia,serif;color:#293f49}
+.library-intro .subheading{font-size:13px;color:#586b72;margin:8px 0 0}
+.library-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:2px solid var(--accent);padding:0 0 11px;margin-bottom:8px}
+.library-heading h2{margin:0;padding:0;border:0;font-size:19px}
+.library-heading>span{font-size:12px;color:var(--muted)}
+.velune-library .work-list{list-style:none;padding:0;margin:0}
+.velune-library .work-item{border-bottom:1px solid var(--line)}
+.velune-library .work-card{display:flex;align-items:center;gap:17px;padding:17px 7px;min-height:115px}
+.velune-library .work-card-cover{display:flex;align-items:center;justify-content:center;width:78px;height:92px;flex-shrink:0;background:linear-gradient(145deg,#cfc0ab,#f1e9d8);border-radius:10px}
+.velune-library .work-card-cover img{display:block;width:48px;height:48px;border-radius:12px}
+.velune-library .work-card-details{display:flex;flex-direction:column;align-items:start;flex:1;min-width:0;gap:6px}
+.velune-library .work-card-title{font-weight:750;font-size:16px;line-height:1.5}
+.velune-library .work-card-teaser{font-size:12px;line-height:1.6;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-width:0}
+.velune-library .work-card-count{font-size:11px;color:var(--accent);font-weight:700}
+.velune-library .work-card-arrow{font-size:24px;font-weight:400;color:var(--accent);margin-left:auto}
+@media(max-width:400px){.velune-library .work-card{gap:11px}.velune-library .work-card-cover{width:62px;height:82px}.velune-library .work-card-cover img{width:42px;height:42px}.library-intro{padding:24px 15px}}
