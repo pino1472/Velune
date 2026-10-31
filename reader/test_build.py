@@ -53,13 +53,17 @@ def check_build(source: Path, dest: Path, chapters: dict[str, list[str]]) -> Non
             assert f"works/{work_id}/episodes/{name}" in sw
     assert "_template" not in sw
     assert "toc-filter" not in (dest / "assets" / "reader.js").read_text(encoding="utf-8")
+    assert "chapter-filter" not in (dest / "assets" / "reader.js").read_text(encoding="utf-8")
     assert "SECRET" not in root_html
     # Reader UX contract: use a chapter drawer rather than a sticky footer.
     ep_html = (dest / "works" / "revalna" / "episodes" /
                chapters["revalna"][0]).read_text(encoding="utf-8")
     assert 'id="chapter-list"' in ep_html
     assert 'id="open-toc"' in ep_html
-    assert 'id="chapter-filter"' in ep_html
+    assert 'id="chapter-filter"' not in ep_html
+    assert '話数・タイトルで検索' not in ep_html
+    assert 'href="../index.html"' in ep_html
+    assert 'class="toc-trigger"' in ep_html
     assert 'aria-current="page"' in ep_html
     assert '<nav class="chapter-nav"' not in ep_html
     home_html = (dest / "works" / "revalna" / "index.html").read_text(encoding="utf-8")
@@ -76,10 +80,16 @@ def check_build(source: Path, dest: Path, chapters: dict[str, list[str]]) -> Non
     assert (dest / "icon.svg").exists()
     assert 'id="chapter-list"' not in home_html
     assert 'id="toc-filter"' not in home_html
+    assert 'class="open-episode-list"' in home_html
+    assert '<div class="work-cover"' not in home_html
+    assert '<img src="../../icon.svg"' not in home_html
     assert 'placeholder="話数・タイトルで探す"' not in home_html
     # Description is explicitly public metadata, not canonical source docs.
     assert '<section class="work-synopsis"' in home_html
     assert 'あらすじ' in home_html
+    assert 'class="synopsis-expander"' in home_html
+    assert 'すべて表示' in home_html
+    assert 'class="synopsis-full"' in home_html
     assert '&lt;script&gt;' in home_html  # HTML-escaped user-supplied description
     assert '<script>private</script>' not in home_html
     # Settings should stay reachable even on short phone viewports.
@@ -96,7 +106,8 @@ def check_build(source: Path, dest: Path, chapters: dict[str, list[str]]) -> Non
     assert 'data-reading-preset="standard"' in ep_html
     assert 'id="font-size" type="range" min="14" max="28" value="17"' in ep_html
     assert 'id="line-height" type="range" min="1.4" max="2.6" value="1.8"' in ep_html
-    assert 'id="reader-width" type="range" min="480" max="960" value="680"' in ep_html
+    assert 'id="reader-width"' not in ep_html
+    assert '本文の幅' not in ep_html
     css = (dest / "assets" / "reader.css").read_text(encoding="utf-8")
     assert "[hidden]{display:none!important}" in css
     assert ".settings-shell{display:flex;flex-direction:column" in css
@@ -108,6 +119,7 @@ def check_build(source: Path, dest: Path, chapters: dict[str, list[str]]) -> Non
     assert 'badge.textContent = "読了"' in script
     assert 'if (scrollY >= 140)' in script
     assert 'el("work-progress-bar")' in script
+    assert "readerWidth" not in script
     assert "if (scrollY >= 140) {" in script
     assert "save(LAST, {path, title})" in script
     # Dialogs must lock the underlying novel and restore the exact scroll position.
@@ -119,6 +131,8 @@ def check_build(source: Path, dest: Path, chapters: dict[str, list[str]]) -> Non
     assert ".brand img{" in css
     assert "#chapter-list{position:fixed;inset:0;margin:auto" in css
     assert "inset:0;margin:auto" in css
+    assert ".prose{max-width:680px" in css
+    assert ".synopsis-expander" in css
     assert "overscroll-behavior:contain" in css
     assert "function openReaderOverlay(element)" in script
     assert "window.scrollTo({top: lockedReaderY" in script
@@ -134,7 +148,7 @@ def main() -> None:
         source, dest = temp / "works", temp / "dist"
         source.mkdir()
         revalna = fixture(source, "revalna", "リヴェルナ・オンライン",
-                          description="作品の紹介文 <script>private</script>")
+                          description="作品の紹介文" + "。ゆっくり読む物語" * 35 + " <script>private</script>")
         (revalna / "第001話.md").write_text(
             "---\ntype: episode_prose\nstatus: PENDING\nstory_adopted: false\n"
             "source_plot: secret/path\n---\n"
