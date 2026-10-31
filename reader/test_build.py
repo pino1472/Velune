@@ -142,9 +142,45 @@ def check_build(source: Path, dest: Path, chapters: dict[str, list[str]]) -> Non
 
 
 
+
+def check_markdown_fidelity(temp: Path) -> None:
+    # Keep Markdown for real formatting; forum references must stay literal.
+    story = temp / "第900話.md"
+    story.write_text(
+        "---\\ntype: episode_prose\\nstatus: PENDING\\n---\\n\\n"
+        "# 第900話「表示検査」\\n\\n"
+        ">>3  \\n>>14  \\n掲示板のレス\\n\\n"
+        "次スレは>>950  \\nコメント行\\n\\n"
+        "> 本当の引用\\n\\n"
+        "**太字**と[リンク](https://example.org)\\n\\n"
+        "- 箇条書き\\n\\n"
+        "```text\\n>>8\\n```\\n\\n"
+        "　全角字下げの段落。\\n\\n"
+        "<script>alert(1)</script>\\n",
+        encoding="utf-8"
+    )
+    episode = mod.episode_data(story)
+    output = episode["html"]
+    assert episode["number"] == 900
+    assert output.startswith("<h1>第900話")
+    assert "&gt;&gt;3<br" in output and "&gt;&gt;14<br" in output
+    assert "次スレは&gt;&gt;950<br" in output
+    assert output.count("<blockquote>") == 1
+    assert "<p>本当の引用</p>" in output
+    assert "<strong>太字</strong>" in output
+    assert '<a href="https://example.org">リンク</a>' in output
+    assert "<ul>" in output and "<li>箇条書き</li>" in output
+    assert "<pre><code" in output and "&gt;&gt;8" in output
+    assert r"\\>\\>8" not in output
+    assert "　全角字下げの段落。" in output
+    assert "&lt;script&gt;alert(1)&lt;/script&gt;" in output
+    assert "status: PENDING" not in output
+
+
 def main() -> None:
     with tempfile.TemporaryDirectory(prefix="velune-work-check-") as folder:
         temp = Path(folder)
+        check_markdown_fidelity(temp)
         source, dest = temp / "works", temp / "dist"
         source.mkdir()
         revalna = fixture(source, "revalna", "リヴェルナ・オンライン",
