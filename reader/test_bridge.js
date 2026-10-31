@@ -2,9 +2,9 @@
 const fs=require("node:fs"),vm=require("node:vm"),assert=require("node:assert/strict");
 const src=fs.readFileSync(require("node:path").join(__dirname,"build.py"),"utf8");
 const start=src.indexOf("    migration_page = r'''");
-const end=src.indexOf("'''",start+23);
+const end=src.indexOf("'''",start+25);
 assert(start>=0 && end>start);
-const page=src.slice(start+23,end);
+const page=src.slice(start+25,end);
 const script=page.match(/<script>([\s\S]*?)<\/script>/);
 assert(script && script[1]);
 new vm.Script(script[1]);
