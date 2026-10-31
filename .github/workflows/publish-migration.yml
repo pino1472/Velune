@@ -3,10 +3,6 @@ name: Restore original Velune public reader
 # Restore the original reader without requesting the retired private source token.
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/publish-migration.yml'
 
 permissions:
   contents: read
