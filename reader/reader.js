@@ -248,16 +248,7 @@
         continuation.hidden = false;
       }
     }
-    el("toc-filter")?.addEventListener("input", event => {
-      const needle = event.currentTarget.value.trim().normalize("NFKC").toLowerCase();
-      let visible = 0;
-      document.querySelectorAll(".toc li").forEach(li => {
-        const show = li.textContent.normalize("NFKC").toLowerCase().includes(needle);
-        li.hidden = !show;
-        if (show) visible++;
-      });
-      if (el("toc-count")) el("toc-count").textContent = visible + "話";
-    });
+
   }
 
   const state = el("offline-state");
