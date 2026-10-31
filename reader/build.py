@@ -380,7 +380,7 @@ def build() -> None:
       if (!key) continue;
       const fixed = ["velune-reader-settings-v2","velune-reader-settings-v1",
                      "velune-reader-last-v2","velune-reader-last"].includes(key);
-      const chapter = /^(velune-reading-progress-v1:|velune-reader-scroll:)\\/Velune\\/works\\/[a-z0-9][a-z0-9_-]{0,63}\\/episodes\\/[0-9]+\\.html$/.test(key);
+      const chapter = /^(velune-reading-progress-v1:|velune-reader-scroll:)\/Velune\/works\/[a-z0-9][a-z0-9_-]{0,63}\/episodes\/[0-9]+\.html$/.test(key);
       if (!fixed && !chapter) continue;
       const value = localStorage.getItem(key);
       if (typeof value === "string" && value.length < 20000) records.push([key, value]);
