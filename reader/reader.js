@@ -124,8 +124,8 @@
   } else {
     const last = read(LAST, null);
     const continuation = el("continue-reading");
-    const rootPath = new URL(document.querySelector('meta[name="app-root"]').content, location.href).pathname.replace(/\/?$/, "/");
-    if (last && typeof last.path === "string" && last.path.startsWith(rootPath + "episodes/") && /^\/[^?#]*\.html$/.test(last.path) && continuation) {
+    const episodeRoot = new URL("episodes/", new URL(document.querySelector('meta[name="app-root"]').content, location.href)).pathname;
+    if (last && typeof last.path === "string" && last.path.startsWith(episodeRoot) && /^\/[^?#]*\.html$/.test(last.path) && continuation) {
       const match = Array.from(document.querySelectorAll(".toc a")).find(a => new URL(a.href).pathname === last.path);
       if (match) {
         continuation.href = last.path;
