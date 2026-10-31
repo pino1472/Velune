@@ -14,7 +14,7 @@ SOURCE = ROOT / "_source" / "works"
 DEST = ROOT / "dist"
 EPISODE_FILE = re.compile(r"^第([0-9]+)話\.md$")
 HEADLINE = re.compile(r"^# +([^\n]+)\s*$", flags=re.MULTILINE)
-TITLE = "Velune"
+TITLE = "Shiorune"
 MARKDOWN = MarkdownIt("commonmark", {"html": False, "linkify": False}).enable("table").enable("strikethrough")
 
 
@@ -156,11 +156,11 @@ def document(title: str, body: str, *, asset_prefix: str, is_episode: bool, toc_
                   if is_episode else "")
     return f'''<!doctype html>
 <html lang="ja" data-theme="paper"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#f4edde"><meta name="app-root" content="{asset_prefix}"><meta name="description" content="Velune 小説リーダー">
+<meta name="theme-color" content="#f4edde"><meta name="app-root" content="{asset_prefix}"><meta name="description" content="Shiorune 小説リーダー">
 <link rel="manifest" href="{asset_prefix}manifest.webmanifest"><link rel="icon" href="{asset_prefix}icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="{asset_prefix}assets/reader.css"><title>{html.escape(title)} - {TITLE}</title></head>
 <body data-episode="{'true' if is_episode else 'false'}">
-<header class="topbar"><a class="brand" href="{asset_prefix}index.html" aria-label="Velune 作品一覧へ"><img src="{asset_prefix}icon.svg" alt="" aria-hidden="true" width="28" height="28"><span>Velune</span></a><div class="topbar-controls"><span class="offline-state" id="offline-state" aria-live="polite"></span>{toc_button}<button id="open-settings" type="button" class="icon-btn" aria-label="表示設定">Aa</button></div></header>
+<header class="topbar"><a class="brand" href="{asset_prefix}index.html" aria-label="Shiorune 作品一覧へ"><img src="{asset_prefix}icon.svg" alt="" aria-hidden="true" width="28" height="28"><span>Shiorune</span></a><div class="topbar-controls"><span class="offline-state" id="offline-state" aria-live="polite"></span>{toc_button}<button id="open-settings" type="button" class="icon-btn" aria-label="表示設定">Aa</button></div></header>
 <main class="reading-area">{body}</main>
 {toc_dialog}
 {settings}<div class="progress-track" id="progress-track" aria-hidden="true"></div>
@@ -222,7 +222,7 @@ def build() -> None:
         shutil.copyfile(ROOT / "reader" / name, DEST / "assets" / name)
     shutil.copyfile(ROOT / "reader" / "icon.svg", DEST / "icon.svg")
     manifest = {
-        "name": "Velune", "short_name": "Velune", "lang": "ja",
+        "name": "Shiorune", "short_name": "Shiorune", "lang": "ja",
         "start_url": "./index.html", "scope": "./", "display": "standalone",
         "background_color": "#f4edde", "theme_color": "#4d483d",
         "icons": [{"src": "./icon.svg", "sizes": "any",
@@ -346,9 +346,9 @@ def build() -> None:
             '</a></li>')
         total_episodes += len(episodes)
 
-    library = (f'<section class="home velune-library">'
-               '<div class="library-intro"><p class="eyebrow">A PLACE BETWEEN PAGES</p>'
-               '<h1>Velune</h1><p class="subheading">物語を、好きな読み心地で。</p></div>'
+    library = (f'<section class="home shiorune-library">'
+               '<div class="library-intro"><p class="eyebrow">SHIORUNE</p>'
+               '<h1>Shiorune</h1></div>'
                f'<div class="library-heading"><h2>作品一覧</h2><span>{len(works)}作品</span></div>'
                '<ul class="work-list">' + "".join(library_items) + '</ul></section>')
     (DEST / "index.html").write_text(

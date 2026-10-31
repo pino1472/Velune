@@ -110,7 +110,7 @@ button{cursor:pointer}
 /* Offline controls remain compact on narrow phone screens. */
 
 /* Multi-work front shelf and per-work navigation */
-.velune-library .subheading{margin-bottom:40px}
+.shiorune-library .subheading{margin-bottom:40px}
 .work-list{list-style:none;padding:0;margin:0}
 .work-item{border-bottom:1px solid var(--line)}
 .work-card{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:76px;padding:17px 8px;font-size:15px}
@@ -251,7 +251,7 @@ body.reader-overlay-open{position:fixed;left:0;right:0;width:100%;overflow:hidde
 @media(max-width:374px){.work-overview{padding:15px}.work-overview p{font-size:13px}.topbar-controls{margin-left:auto}}
 
 
-/* Velune brand mark: compact, explicit 44 px touch target. */
+/* Shiorune brand mark: compact, explicit 44px touch target. */
 .brand{display:inline-flex;align-items:center;gap:8px;flex:0 0 auto;min-height:44px;min-width:44px;max-width:none;padding:4px 6px 4px 0;font-family:Georgia,"Yu Mincho",serif;font-size:17px;font-weight:700;letter-spacing:-.015em}
 .brand img{display:block;width:28px;height:28px;border-radius:8px;flex:0 0 auto}
 .brand span{display:inline-block}
@@ -326,25 +326,25 @@ body.reader-overlay-open{position:fixed;left:0;right:0;width:100%;overflow:hidde
 }
 
 /* A richer library with small graphic cover thumbnails and short synopses. */
-.velune-library{max-width:810px}
-.library-intro{border-radius:16px;padding:28px 20px;margin:0 0 30px;background:linear-gradient(140deg,#e1d4c1,#f6efe2);color:#293f49;box-shadow:0 4px 20px #0000000b}
+.shiorune-library{max-width:810px}
+.library-intro{border-radius:16px;padding:28px 20px;margin:0 0 30px;background:linear-gradient(140deg,#dce9e6,#f7f1e8);color:#1f2a44;box-shadow:0 4px 20px #0000000b}
 .library-intro .eyebrow{font-size:10px;letter-spacing:.18em;margin:0 0 8px;color:#766348}
-.library-intro h1{font-size:34px;font-family:Georgia,serif;color:#293f49}
+.library-intro h1{font-size:34px;font-family:Georgia,serif;color:#1f2a44}
 .library-intro .subheading{font-size:13px;color:#586b72;margin:8px 0 0}
 .library-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:2px solid var(--accent);padding:0 0 11px;margin-bottom:8px}
 .library-heading h2{margin:0;padding:0;border:0;font-size:19px}
 .library-heading>span{font-size:12px;color:var(--muted)}
-.velune-library .work-list{list-style:none;padding:0;margin:0}
-.velune-library .work-item{border-bottom:1px solid var(--line)}
-.velune-library .work-card{display:flex;align-items:center;gap:17px;padding:17px 7px;min-height:115px}
-.velune-library .work-card-cover{display:flex;align-items:center;justify-content:center;width:78px;height:92px;flex-shrink:0;background:linear-gradient(145deg,#cfc0ab,#f1e9d8);border-radius:10px}
-.velune-library .work-card-cover img{display:block;width:48px;height:48px;border-radius:12px}
-.velune-library .work-card-details{display:flex;flex-direction:column;align-items:start;flex:1;min-width:0;gap:6px}
-.velune-library .work-card-title{font-weight:750;font-size:16px;line-height:1.5}
-.velune-library .work-card-teaser{font-size:12px;line-height:1.6;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-width:0}
-.velune-library .work-card-count{font-size:11px;color:var(--accent);font-weight:700}
-.velune-library .work-card-arrow{font-size:24px;font-weight:400;color:var(--accent);margin-left:auto}
-@media(max-width:400px){.velune-library .work-card{gap:11px}.velune-library .work-card-cover{width:62px;height:82px}.velune-library .work-card-cover img{width:42px;height:42px}.library-intro{padding:24px 15px}}
+.shiorune-library .work-list{list-style:none;padding:0;margin:0}
+.shiorune-library .work-item{border-bottom:1px solid var(--line)}
+.shiorune-library .work-card{display:flex;align-items:center;gap:17px;padding:17px 7px;min-height:115px}
+.shiorune-library .work-card-cover{display:flex;align-items:center;justify-content:center;width:78px;height:92px;flex-shrink:0;background:linear-gradient(145deg,#cfc0ab,#f1e9d8);border-radius:10px}
+.shiorune-library .work-card-cover img{display:block;width:48px;height:48px;border-radius:12px}
+.shiorune-library .work-card-details{display:flex;flex-direction:column;align-items:start;flex:1;min-width:0;gap:6px}
+.shiorune-library .work-card-title{font-weight:750;font-size:16px;line-height:1.5}
+.shiorune-library .work-card-teaser{font-size:12px;line-height:1.6;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-width:0}
+.shiorune-library .work-card-count{font-size:11px;color:var(--accent);font-weight:700}
+.shiorune-library .work-card-arrow{font-size:24px;font-weight:400;color:var(--accent);margin-left:auto}
+@media(max-width:400px){.shiorune-library .work-card{gap:11px}.shiorune-library .work-card-cover{width:62px;height:82px}.shiorune-library .work-card-cover img{width:42px;height:42px}.library-intro{padding:24px 15px}}
 
 /* Synopsis: no long wall of text on initial open; expand without JavaScript. */
 .synopsis-expander{font-size:14px;line-height:1.9;min-width:0}
@@ -362,8 +362,8 @@ body.reader-overlay-open{position:fixed;left:0;right:0;width:100%;overflow:hidde
 .work-hero-info{width:100%}
 .work-hero{min-height:0}
 .work-hero h1{max-width:100%;font-size:clamp(22px,5vw,32px)}
-.velune-library .work-card{gap:13px}
-.velune-library .work-card-details{align-items:start}
+.shiorune-library .work-card{gap:13px}
+.shiorune-library .work-card-details{align-items:start}
 @media(max-width:540px){.work-hero h1{font-size:clamp(20px,5.6vw,27px)}.work-action-row{gap:8px}.open-episode-list{flex:1 1 155px}}
 
 

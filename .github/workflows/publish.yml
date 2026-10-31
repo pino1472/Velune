@@ -1,4 +1,4 @@
-name: Publish Velune reader
+name: Publish Shiorune reader
 
 # Explicit only. Updating the private source repository never triggers this workflow.
 on:

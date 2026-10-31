@@ -1,4 +1,4 @@
-name: Verify Velune reader
+name: Verify Shiorune reader
 
 # Test once when a PR is marked ready; do not run for every commit.
 on:
