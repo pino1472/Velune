@@ -60,8 +60,8 @@ def document(title: str, body: str, *, asset_prefix: str, is_episode: bool, toc_
         </div></fieldset>
 <label class="setting-range">文字サイズ <output id="font-value">17px</output><input id="font-size" type="range" min="14" max="28" value="17" step="1"></label>
         <label class="setting-range">行間 <output id="line-value">1.8</output><input id="line-height" type="range" min="1.4" max="2.6" value="1.8" step="0.1"></label>
-        <label class="setting-range">本文の幅 <output id="width-value">680px</output><input id="reader-width" type="range" min="480" max="960" value="680" step="40"></label>
-            <p class="settings-width-help">本文幅は大きな画面での最大幅です。スマートフォンでは画面幅に合わせます。</p>
+
+
 <div class="settings-preview" aria-label="本文プレビュー"><span>プレビュー</span><p>　物語は、ここから始まる。</p><p>　お気に入りの文字と色で、続きを読もう。</p></div>
           </section>
           <section class="settings-tab-panel" id="panel-font" role="tabpanel" aria-labelledby="tab-font" hidden>
@@ -103,8 +103,8 @@ def document(title: str, body: str, *, asset_prefix: str, is_episode: bool, toc_
           <button id="done-settings" class="settings-done" type="button">読書に戻る</button>
         </footer>
       </div></dialog>'''
-    toc_button = ('<button id="open-toc" type="button" class="toc-trigger"'
-                  ' aria-haspopup="dialog" aria-controls="chapter-list">☰ <span>目次</span></button>'
+    toc_button = ('<a id="open-toc" class="toc-trigger" href="../index.html"'
+                  ' aria-haspopup="dialog" aria-controls="chapter-list">☰ <span>目次</span></a>'
                   if is_episode else "")
     toc_dialog = (f'<dialog id="chapter-list" aria-label="作品の目次">'
                   f'<div class="toc-panel"><div class="toc-panel-head">'
@@ -222,26 +222,38 @@ def build() -> None:
             '<span class="episode-status" aria-label="読書状況">未読</span>'
             '</a></li>'
             for ep in episodes)
-        overview = (
-            '<section class="work-synopsis" aria-labelledby="work-overview-title">'
-            '<h2 id="work-overview-title">あらすじ</h2>'
-            f'<p>{html.escape(description)}</p></section>'
-            if description else ""
-        )
-        cover = ('<div class="work-cover" aria-hidden="true">'
-                 '<img src="../../icon.svg" alt="" width="86" height="86">'
-                 '<span>VELUNE STORIES</span></div>')
+        # Native details lets visitors expand long descriptions without JavaScript.
+        if description and len(description) > 160:
+            excerpt = html.escape(description[:156].rstrip() + "…")
+            overview = (
+                '<section class="work-synopsis" aria-labelledby="work-overview-title">'
+                '<h2 id="work-overview-title">あらすじ</h2>'
+                '<details class="synopsis-expander"><summary>'
+                f'<span class="synopsis-excerpt">{excerpt}</span>'
+                '<span class="synopsis-toggle">すべて表示 ↓</span></summary>'
+                f'<p class="synopsis-full">{html.escape(description)}</p>'
+                '</details></section>'
+            )
+        elif description:
+            overview = (
+                '<section class="work-synopsis" aria-labelledby="work-overview-title">'
+                '<h2 id="work-overview-title">あらすじ</h2>'
+                f'<p>{html.escape(description)}</p></section>'
+            )
+        else:
+            overview = ""
         first_href = './episodes/' + episodes[0]["slug"] + '.html'
         hero = (
             '<section class="work-hero" aria-label="作品情報">'
-            '<div class="work-hero-main">' + cover +
+            '<div class="work-hero-main">' +
             '<div class="work-hero-info"><p class="work-category">WEB NOVEL</p>'
             f'<h1>{html.escape(title)}</h1>'
             f'<div class="work-meta"><span>全{len(episodes)}話</span>'
-            '<span>いつでも読める</span></div></div></div>'
+            '</div></div></div>'
             '<div class="work-action-row">'
             f'<a class="start-reading" href="{first_href}">第1話から読む <span aria-hidden="true">→</span></a>'
             '<a class="continue" id="continue-reading" hidden>続きを読む <span aria-hidden="true">→</span></a>'
+            '<a class="open-episode-list" href="#episode-list-title">エピソード一覧を見る ↓</a>'
             '</div></section>'
         )
         home = (
@@ -275,7 +287,7 @@ def build() -> None:
         teaser = html.escape(description[:85] + ("…" if len(description) > 85 else ""))
         library_items.append(
             '<li class="work-item"><a class="work-card" href="./works/' + work_id + '/index.html">'
-            '<span class="work-card-cover" aria-hidden="true"><img src="./icon.svg" alt="" width="46" height="46"></span>'
+            
             '<span class="work-card-details"><strong class="work-card-title">' + html.escape(title) + '</strong>'
             '<span class="work-card-teaser">' + teaser + '</span>'
             '<span class="work-card-count">全' + str(len(episodes)) + '話</span></span>'
