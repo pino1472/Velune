@@ -69,7 +69,7 @@ def check_build(source: Path, dest: Path, chapters: dict[str, list[str]]) -> Non
     assert 'class="work-progress-track"' in home_html
     assert 'id="completed-count"' in home_html
     assert 'class="episode-status" aria-label="読書状況"' in home_html
-    assert 'class="work-episodes"' in home_html
+    assert 'class="toc work-episodes"' in home_html
     assert '<section class="offline-library"' not in home_html
     assert 'id="continue-reading" hidden' in home_html
     assert '<img src="../../icon.svg"' in home_html
