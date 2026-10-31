@@ -1,8 +1,8 @@
 (() => {
   "use strict";
-  const KEY = "velune-reader-settings-v1";
-  const LAST = "velune-reader-last";
-  const defaults = {font: "meiryo", fontSize: 18, lineHeight: 1.9, readerWidth: 720, theme: "paper", customColor: "#f4edde"};
+  const KEY = "velune-reader-settings-v2";
+  const LAST = "velune-reader-last-v2";
+  const defaults = {font: "meiryo", fontSize: 17, lineHeight: 1.8, readerWidth: 680, theme: "paper", customColor: "#f4edde"};
   const fonts = {
     serif: '"Noto Serif CJK JP","Hiragino Mincho ProN","Yu Mincho","MS PMincho",serif',
     "yu-mincho": '"Yu Mincho","YuMincho","Hiragino Mincho ProN","Noto Serif CJK JP",serif',
@@ -28,9 +28,23 @@
     try { localStorage.setItem(key, JSON.stringify(value)); }
     catch {}
   }
-  const stored = read(KEY, {});
-  const settings = {...defaults, ...(stored && typeof stored === "object" ? stored : {})};
+  const stored = read(KEY, null);
+  const legacy = stored === null ? read("velune-reader-settings-v1", null) : null;
+  const earlier = stored || legacy;
+  const settings = {...defaults, ...(earlier && typeof earlier === "object" ? earlier : {})};
+  // Only migrate the old untouched 18/1.9/720 defaults, never override custom sizes.
+  if (stored === null && legacy && Number(legacy.fontSize) === 18 &&
+      Number(legacy.lineHeight) === 1.9 && Number(legacy.readerWidth) === 720) {
+    settings.fontSize = defaults.fontSize;
+    settings.lineHeight = defaults.lineHeight;
+    settings.readerWidth = defaults.readerWidth;
+  }
 
+  const readingPresets = {
+    compact: {fontSize: 15, lineHeight: 1.6, readerWidth: 720},
+    standard: {fontSize: 17, lineHeight: 1.8, readerWidth: 680},
+    relaxed: {fontSize: 19, lineHeight: 2.0, readerWidth: 640}
+  };
   function luminance(hex) {
     const rgb = [1, 3, 5].map(index => parseInt(hex.slice(index, index + 2), 16) / 255);
     return rgb.map(channel => channel <= 0.04045 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4))
@@ -40,9 +54,9 @@
     if (!(settings.font in fonts)) settings.font = defaults.font;
     if (!(settings.theme in palettes) && settings.theme !== "custom") settings.theme = defaults.theme;
     if (!/^#[0-9a-f]{6}$/i.test(settings.customColor)) settings.customColor = defaults.customColor;
-    settings.fontSize = Math.max(14, Math.min(28, Number(settings.fontSize) || 18));
-    settings.lineHeight = Math.max(1.4, Math.min(2.6, Number(settings.lineHeight) || 1.9));
-    settings.readerWidth = Math.max(480, Math.min(960, Number(settings.readerWidth) || 720));
+    settings.fontSize = Math.max(14, Math.min(28, Number(settings.fontSize) || defaults.fontSize));
+    settings.lineHeight = Math.max(1.4, Math.min(2.6, Number(settings.lineHeight) || defaults.lineHeight));
+    settings.readerWidth = Math.max(480, Math.min(960, Number(settings.readerWidth) || defaults.readerWidth));
     const root = document.documentElement;
     const bg = settings.theme === "custom" ? settings.customColor : palettes[settings.theme];
     const isDark = luminance(bg) < 0.24;
@@ -65,10 +79,50 @@
     document.querySelectorAll('input[name="theme"]').forEach(input => { input.checked = input.value === settings.theme; });
     document.querySelectorAll('input[name="font"]').forEach(input => { input.checked = input.value === settings.font; });
     if (el("custom-color")) el("custom-color").value = settings.customColor;
+    document.querySelectorAll("[data-reading-preset]").forEach(button => {
+      const preset = readingPresets[button.dataset.readingPreset];
+      const active = preset && preset.fontSize === settings.fontSize &&
+        preset.lineHeight === settings.lineHeight && preset.readerWidth === settings.readerWidth;
+      button.setAttribute("aria-pressed", active ? "true" : "false");
+    });
   }
   apply();
   const dialog = el("settings");
-  el("open-settings")?.addEventListener("click", () => dialog?.showModal());
+  const settingsScroller = el("settings-scroll");
+  const settingTabs = [...document.querySelectorAll("[data-settings-tab]")];
+  function switchSettingsTab(name) {
+    const chosen = settingTabs.find(tab => tab.dataset.settingsTab === name);
+    if (!chosen) return;
+    for (const tab of settingTabs) {
+      const selected = tab === chosen;
+      tab.setAttribute("aria-selected", selected ? "true" : "false");
+      tab.tabIndex = selected ? 0 : -1;
+      const panel = el(tab.getAttribute("aria-controls"));
+      if (panel) panel.hidden = !selected;
+    }
+    if (settingsScroller) settingsScroller.scrollTop = 0;
+  }
+  settingTabs.forEach((tab, i) => {
+    tab.addEventListener("click", () => switchSettingsTab(tab.dataset.settingsTab));
+    tab.addEventListener("keydown", event => {
+      let next = i;
+      if (event.key === "ArrowRight") next = (i + 1) % settingTabs.length;
+      else if (event.key === "ArrowLeft") next = (i + settingTabs.length - 1) % settingTabs.length;
+      else if (event.key === "Home") next = 0;
+      else if (event.key === "End") next = settingTabs.length - 1;
+      else return;
+      event.preventDefault();
+      const target = settingTabs[next];
+      switchSettingsTab(target.dataset.settingsTab);
+      target.focus();
+    });
+  });
+  el("open-settings")?.addEventListener("click", () => {
+    switchSettingsTab("reading");
+    dialog?.showModal();
+  });
+  el("close-settings")?.addEventListener("click", () => dialog?.close());
+  el("done-settings")?.addEventListener("click", () => dialog?.close());
   dialog?.addEventListener("click", event => { if (event.target === dialog) dialog.close(); });
   document.querySelectorAll('input[name="font"]').forEach(input =>
     input.addEventListener("change", event => { settings.font = event.currentTarget.value; apply(); save(KEY, settings); })
@@ -93,15 +147,40 @@
       save(KEY, settings);
     })
   );
+  document.querySelectorAll("[data-reading-preset]").forEach(button =>
+    button.addEventListener("click", () => {
+      const preset = readingPresets[button.dataset.readingPreset];
+      if (!preset) return;
+      Object.assign(settings, preset);
+      apply();
+      save(KEY, settings);
+    })
+  );
   el("reset-settings")?.addEventListener("click", () => {
     Object.assign(settings, defaults);
     apply();
     save(KEY, settings);
   });
 
+  const tocDialog = el("chapter-list");
+  el("open-toc")?.addEventListener("click", () => {
+    tocDialog?.showModal();
+    const active = tocDialog?.querySelector('[aria-current="page"]');
+    if (active) requestAnimationFrame(() => active.scrollIntoView({block: "center"}));
+  });
+  el("close-toc")?.addEventListener("click", () => tocDialog?.close());
+  tocDialog?.addEventListener("click", event => {
+    if (event.target === tocDialog) tocDialog.close();
+  });
+  el("chapter-filter")?.addEventListener("input", event => {
+    const needle = event.currentTarget.value.trim().normalize("NFKC").toLowerCase();
+    tocDialog.querySelectorAll(".drawer-toc li").forEach(item => {
+      item.hidden = !item.textContent.normalize("NFKC").toLowerCase().includes(needle);
+    });
+  });
+
   if (document.body.dataset.episode === "true") {
     const title = document.querySelector(".prose h1")?.textContent || document.title;
-    save(LAST, {path: location.pathname, title});
     const positionKey = "velune-reader-scroll:" + location.pathname;
     const previous = Number(read(positionKey, 0));
     if (Number.isFinite(previous) && previous > 0) {
@@ -114,6 +193,9 @@
       const progressTrack = el("progress-track");
       if (progressTrack) progressTrack.style.width = (progress * 100).toFixed(2) + "%";
       save(positionKey, Math.round(scrollY));
+      // Visiting the first page is not reading progress. Resume appears only
+      // after an actual scroll into the chapter (including a restored position).
+      if (scrollY >= 140) save(LAST, {path: location.pathname, title});
       pending = false;
     };
     window.addEventListener("scroll", () => {

@@ -38,11 +38,35 @@ def episode_data(path: Path) -> dict:
             "html": MARKDOWN.render(body), "slug": str(number).zfill(3)}
 
 
-def document(title: str, body: str, *, asset_prefix: str, is_episode: bool, previous: str = "", following: str = "") -> str:
-    settings = '''<dialog id="settings" aria-label="表示設定">
-      <form method="dialog" class="settings-panel">
-        <div class="settings-head"><div><p class="settings-eyebrow">READING PREFERENCES</p><h2>表示設定</h2></div><button class="icon-btn" aria-label="閉じる" value="close">×</button></div>
-        <fieldset><legend>フォント</legend><div class="font-choice">
+def document(title: str, body: str, *, asset_prefix: str, is_episode: bool, toc_items: str = "", work_title: str = "") -> str:
+    settings = '''<dialog id="settings" aria-labelledby="settings-title">
+      <div class="settings-shell">
+        <header class="settings-head">
+          <div><p class="settings-eyebrow">READING PREFERENCES</p><h2 id="settings-title">表示設定</h2></div>
+          <button id="close-settings" type="button" class="icon-btn" aria-label="設定を閉じる">×</button>
+        </header>
+        <div class="settings-tabs" role="tablist" aria-label="表示設定の項目">
+          <button type="button" id="tab-reading" role="tab" data-settings-tab="reading" aria-selected="true" aria-controls="panel-reading" tabindex="0">読み心地</button>
+          <button type="button" id="tab-font" role="tab" data-settings-tab="font" aria-selected="false" aria-controls="panel-font" tabindex="-1">書体</button>
+          <button type="button" id="tab-theme" role="tab" data-settings-tab="theme" aria-selected="false" aria-controls="panel-theme" tabindex="-1">背景</button>
+        </div>
+        <div class="settings-scroll settings-panel" id="settings-scroll">
+          <section class="settings-tab-panel" id="panel-reading" role="tabpanel" aria-labelledby="tab-reading">
+            <p class="settings-section-intro">まずは読みやすさを選び、必要なら微調整できます。</p>
+<fieldset class="reading-presets"><legend>読み心地</legend><div class="preset-choice">
+          <button type="button" data-reading-preset="compact">すっきり<small>15px · 行間1.6</small></button>
+          <button type="button" data-reading-preset="standard">標準<small>17px · 行間1.8</small></button>
+          <button type="button" data-reading-preset="relaxed">ゆったり<small>19px · 行間2.0</small></button>
+        </div></fieldset>
+<label class="setting-range">文字サイズ <output id="font-value">17px</output><input id="font-size" type="range" min="14" max="28" value="17" step="1"></label>
+        <label class="setting-range">行間 <output id="line-value">1.8</output><input id="line-height" type="range" min="1.4" max="2.6" value="1.8" step="0.1"></label>
+        <label class="setting-range">本文の幅 <output id="width-value">680px</output><input id="reader-width" type="range" min="480" max="960" value="680" step="40"></label>
+            <p class="settings-width-help">本文幅は大きな画面での最大幅です。スマートフォンでは画面幅に合わせます。</p>
+<div class="settings-preview" aria-label="本文プレビュー"><span>プレビュー</span><p>　物語は、ここから始まる。</p><p>　お気に入りの文字と色で、続きを読もう。</p></div>
+          </section>
+          <section class="settings-tab-panel" id="panel-font" role="tabpanel" aria-labelledby="tab-font" hidden>
+            <p class="settings-section-intro">好きな書体を選択してください。端末にない書体は代替表示されます。</p>
+<fieldset><legend>フォント</legend><div class="font-choice">
           <label class="font-card" data-font="serif"><input name="font" type="radio" value="serif"><span class="font-name">標準の明朝</span><span class="font-sample demo-serif">あいうえお 漢字</span></label>
           <label class="font-card" data-font="yu-mincho"><input name="font" type="radio" value="yu-mincho"><span class="font-name">游明朝</span><span class="font-sample demo-yumincho">あいうえお 漢字</span></label>
           <label class="font-card" data-font="hiragino-mincho"><input name="font" type="radio" value="hiragino-mincho"><span class="font-name">ヒラギノ明朝</span><span class="font-sample demo-hiraginomincho">あいうえお 漢字</span></label>
@@ -52,7 +76,10 @@ def document(title: str, body: str, *, asset_prefix: str, is_episode: bool, prev
           <label class="font-card" data-font="rounded"><input name="font" type="radio" value="rounded"><span class="font-name">丸ゴシック</span><span class="font-sample demo-rounded">あいうえお 漢字</span></label>
           <label class="font-card" data-font="mono"><input name="font" type="radio" value="mono"><span class="font-name">等幅</span><span class="font-sample demo-mono">あいうえお 漢字</span></label>
         </div><p class="settings-hint">端末にないフォントは近い書体で表示されます。</p></fieldset>
-        <fieldset><legend>背景カラーパレット</legend><div class="color-choice">
+          </section>
+          <section class="settings-tab-panel" id="panel-theme" role="tabpanel" aria-labelledby="tab-theme" hidden>
+            <p class="settings-section-intro">背景を選択すると、その場で読書画面に反映されます。</p>
+<fieldset><legend>背景カラーパレット</legend><div class="color-choice">
           <label><input name="theme" type="radio" value="paper"><span class="color-swatch" style="--swatch:#f4edde"></span><span>生成り</span></label>
           <label><input name="theme" type="radio" value="light"><span class="color-swatch" style="--swatch:#ffffff"></span><span>白</span></label>
           <label><input name="theme" type="radio" value="ivory"><span class="color-swatch" style="--swatch:#fff8e7"></span><span>象牙</span></label>
@@ -69,26 +96,35 @@ def document(title: str, body: str, *, asset_prefix: str, is_episode: bool, prev
           <label><input name="theme" type="radio" value="sepia"><span class="color-swatch" style="--swatch:#423a31"></span><span>焦茶</span></label>
           <label class="custom-theme"><input name="theme" type="radio" value="custom"><span class="custom-picker"><input type="color" id="custom-color" value="#f4edde" aria-label="好きな背景色を選択"></span><span>自由色</span></label>
         </div></fieldset>
-        <div class="settings-preview" aria-label="本文プレビュー"><span>プレビュー</span><p>　物語は、ここから始まる。</p><p>　お気に入りの文字と色で、続きを読もう。</p></div>
-        <label class="setting-range">文字サイズ <output id="font-value">18px</output><input id="font-size" type="range" min="14" max="28" value="18" step="1"></label>
-        <label class="setting-range">行間 <output id="line-value">1.9</output><input id="line-height" type="range" min="1.4" max="2.6" value="1.9" step="0.1"></label>
-        <label class="setting-range">本文の幅 <output id="width-value">720px</output><input id="reader-width" type="range" min="480" max="960" value="720" step="40"></label>
-        <button id="reset-settings" class="reset-btn" type="button">表示設定を初期化</button>
-      </form></dialog>'''
-    nav = '<nav class="chapter-nav" aria-label="話数移動">'
-    nav += (f'<a rel="prev" href="{previous}">← 前の話</a>' if previous else '<span></span>')
-    nav += '<a href="../index.html">目次</a>'
-    nav += (f'<a rel="next" href="{following}">次の話 →</a>' if following else '<span></span>')
-    nav += '</nav>'
+          </section>
+        </div>
+        <footer class="settings-footer">
+          <button id="reset-settings" class="reset-btn" type="button">初期値に戻す</button>
+          <button id="done-settings" class="settings-done" type="button">読書に戻る</button>
+        </footer>
+      </div></dialog>'''
+    toc_button = ('<button id="open-toc" type="button" class="toc-trigger"'
+                  ' aria-haspopup="dialog" aria-controls="chapter-list">☰ <span>目次</span></button>'
+                  if is_episode else "")
+    toc_dialog = (f'<dialog id="chapter-list" aria-label="作品の目次">'
+                  f'<div class="toc-panel"><div class="toc-panel-head">'
+                  f'<div><p class="settings-eyebrow">CHAPTERS</p><h2>{html.escape(work_title)}</h2></div>'
+                  '<button id="close-toc" type="button" class="icon-btn" aria-label="目次を閉じる">×</button></div>'
+                  '<label class="search-wrapper toc-search"><span aria-hidden="true">⌕</span>'
+                  '<input id="chapter-filter" type="search" placeholder="話数・タイトルで検索"'
+                  ' aria-label="話数やタイトルで検索"></label>'
+                  f'<ol class="toc drawer-toc">{toc_items}</ol>'
+                  '<p class="toc-panel-back"><a href="../index.html">作品の目次ページへ</a></p></div></dialog>'
+                  if is_episode else "")
     return f'''<!doctype html>
 <html lang="ja" data-theme="paper"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f4edde"><meta name="app-root" content="{asset_prefix}"><meta name="description" content="Velune 小説リーダー">
 <link rel="manifest" href="{asset_prefix}manifest.webmanifest"><link rel="icon" href="{asset_prefix}icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="{asset_prefix}assets/reader.css"><title>{html.escape(title)} - {TITLE}</title></head>
 <body data-episode="{'true' if is_episode else 'false'}">
-<header class="topbar"><a class="brand" href="{asset_prefix}index.html">Velune</a><div class="topbar-controls"><span class="offline-state" id="offline-state" aria-live="polite"></span><button id="open-settings" type="button" class="icon-btn" aria-label="表示設定">Aa</button></div></header>
+<header class="topbar"><a class="brand" href="{asset_prefix}index.html">Velune</a><div class="topbar-controls"><span class="offline-state" id="offline-state" aria-live="polite"></span>{toc_button}<button id="open-settings" type="button" class="icon-btn" aria-label="表示設定">Aa</button></div></header>
 <main class="reading-area">{body}</main>
-{nav if is_episode else ''}
+{toc_dialog}
 {settings}<div class="progress-track" id="progress-track" aria-hidden="true"></div>
 <script defer src="{asset_prefix}assets/reader.js"></script></body></html>'''
 
@@ -164,12 +200,15 @@ def build() -> None:
         title = work["title"]
         book_dir = DEST / "works" / work_id
         (book_dir / "episodes").mkdir(parents=True)
-        for position, ep in enumerate(episodes):
-            previous = f'{episodes[position - 1]["slug"]}.html' if position else ""
-            following = f'{episodes[position + 1]["slug"]}.html' if position + 1 < len(episodes) else ""
+        for ep in episodes:
+            toc_items = "\n".join(
+                '<li><a href="' + entry["slug"] + '.html"' +
+                (' aria-current="page"' if entry["slug"] == ep["slug"] else '') +
+                '>' + html.escape(entry["name"]) + '</a></li>'
+                for entry in episodes)
             body = f'<article class="prose">{ep["html"]}</article>'
             page = document(ep["name"], body, asset_prefix="../../../",
-                            is_episode=True, previous=previous, following=following)
+                            is_episode=True, toc_items=toc_items, work_title=title)
             dest = book_dir / "episodes" / f'{ep["slug"]}.html'
             dest.write_text(page, encoding="utf-8")
             chapter_paths.append("./" + dest.relative_to(DEST).as_posix())
@@ -180,12 +219,12 @@ def build() -> None:
                 f'<h1>{html.escape(title)}</h1><p class="subheading">{len(episodes)}話</p>'
                 '<p class="work-back"><a href="../../index.html">← 作品一覧へ戻る</a></p>'
                 '<a class="continue" id="continue-reading" hidden>続きを読む →</a>'
-                '<section class="offline-library" aria-label="オフライン保存">'
-                '<div><strong>オフライン読書</strong>'
-                '<p>開いた話は自動保存。通信のない場所でも読めます。</p></div>'
+                '<details class="offline-tools"><summary>オフライン保存'
+                '<span aria-hidden="true" class="offline-chevron">⌄</span></summary>'
+                '<div class="offline-detail"><p>この作品をまとめて端末に保存できます。</p>'
                 '<button type="button" id="save-all">全話を保存</button>'
                 '<p class="offline-progress" id="offline-progress" aria-live="polite">'
-                '保存済みの話を確認しています</p></section>'
+                '保存状況を確認しています</p></div></details>'
                 f'<div class="toc-heading"><h2>目次</h2><span id="toc-count">{len(episodes)}話</span></div>'
                 '<label class="search-wrapper"><span aria-hidden="true">⌕</span>'
                 '<input id="toc-filter" type="search" placeholder="話数・タイトルで探す"'
