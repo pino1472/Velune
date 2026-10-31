@@ -1,0 +1,13 @@
+"use strict";
+const fs=require("node:fs"),vm=require("node:vm"),assert=require("node:assert/strict");
+const src=fs.readFileSync(require("node:path").join(__dirname,"build.py"),"utf8");
+const start=src.indexOf("    migration_page = r'''");
+const end=src.indexOf("'''",start+23);
+assert(start>=0 && end>start);
+const page=src.slice(start+23,end);
+const script=page.match(/<script>([\s\S]*?)<\/script>/);
+assert(script && script[1]);
+new vm.Script(script[1]);
+assert(script[1].includes('window.opener.postMessage'));
+assert(script[1].includes('https://shiorune.github.io'));
+console.log("Legacy migration bridge script is valid JavaScript");
