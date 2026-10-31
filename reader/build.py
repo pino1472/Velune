@@ -23,7 +23,7 @@ MARKDOWN = MarkdownIt("commonmark", {"html": False, "linkify": False}).enable("t
 # CommonMark otherwise parses it as nested block quotes and hides both ">".
 # Keep Markdown parsing enabled for genuine "> " quotes, headings and links.
 # Do not alter characters in fenced/indented code blocks.
-BBS_REFERENCE = re.compile(r"^([ \\t]{0,3})(>{2,})")
+BBS_REFERENCE = re.compile(r"^([ \t]{0,3})(>{2,})")
 FENCE_OPEN = re.compile(r"^ {0,3}(`{3,}|~{3,})")
 
 
@@ -32,11 +32,11 @@ def preserve_forum_reply_markers(source: str) -> str:
     fence_char = ""
     fence_length = 0
     for line in source.splitlines(keepends=True):
-        content = line.rstrip("\\r\\n")
+        content = line.rstrip("\r\n")
         if fence_char:
             closing = re.fullmatch(
                 r" {0,3}" + re.escape(fence_char) +
-                "{" + str(fence_length) + r",}[ \\t]*", content
+                "{" + str(fence_length) + r",}[ \t]*", content
             )
             if closing:
                 fence_char = ""
