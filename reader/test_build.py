@@ -70,11 +70,10 @@ def check_build(source: Path, dest: Path, chapters: dict[str, list[str]]) -> Non
     assert 'id="toc-filter"' not in home_html
     assert 'placeholder="話数・タイトルで探す"' not in home_html
     # Description is explicitly public metadata, not canonical source docs.
-    if work_id == "revalna":
-        assert '<section class="work-overview"' in home_html
-        assert 'あらすじ' in home_html
-        assert '&lt;script&gt;' in home_html  # HTML-escaped user-supplied description
-        assert '<script>private</script>' not in home_html
+    assert '<section class="work-overview"' in home_html
+    assert 'あらすじ' in home_html
+    assert '&lt;script&gt;' in home_html  # HTML-escaped user-supplied description
+    assert '<script>private</script>' not in home_html
     # Settings should stay reachable even on short phone viewports.
     assert '<div class="settings-shell">' in ep_html
     assert 'id="settings-scroll"' in ep_html
