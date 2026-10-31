@@ -58,6 +58,7 @@ jobs:
         run: |
           python reader/test_build.py
           node --check reader/reader.js
+          node reader/test_reset.js
 
       - name: Generate all published works and their episodes
         run: |
