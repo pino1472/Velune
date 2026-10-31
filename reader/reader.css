@@ -1,5 +1,5 @@
 /* Mobile-first novel reading styles; all fonts are local system fallbacks. */
-:root{--bg:#f4edde;--fg:#322e29;--muted:#776c60;--line:#d5cab9;--accent:#70583f;--reader-font:Georgia,"Hiragino Mincho ProN","Yu Mincho","Noto Serif CJK JP",serif;--font-size:17px;--line-height:1.8;--reader-width:680px;--ui-font:-apple-system,BlinkMacSystemFont,"Meiryo UI","Meiryo","Hiragino Kaku Gothic ProN",system-ui,sans-serif;color-scheme:light}
+:root{--bg:#f4edde;--fg:#322e29;--muted:#776c60;--line:#d5cab9;--accent:#70583f;--reader-font:Georgia,"Hiragino Mincho ProN","Yu Mincho","Noto Serif CJK JP",serif;--font-size:17px;--line-height:1.8;--ui-font:-apple-system,BlinkMacSystemFont,"Meiryo UI","Meiryo","Hiragino Kaku Gothic ProN",system-ui,sans-serif;color-scheme:light}
 html[data-theme="light"]{--bg:#fff;--fg:#242424;--muted:#666;--line:#e6e6e6;--accent:#424242}
 html[data-theme="night"]{--bg:#20252b;--fg:#e9e8e5;--muted:#aaaeb6;--line:#434954;--accent:#c9ab85;color-scheme:dark}
 html[data-theme="sky"]{--bg:#dceef5;--fg:#263944;--muted:#5a7180;--line:#bbd4e0;--accent:#375c6c}
@@ -17,7 +17,7 @@ button{cursor:pointer}
 .icon-btn{min-width:44px;min-height:44px;border:1px solid var(--line);border-radius:10px;color:var(--fg);background:transparent;font-weight:700;font-size:16px}
 .icon-btn:active{background:var(--line)}
 .reading-area{min-height:65vh;padding:32px 20px 72px}
-.prose{max-width:var(--reader-width);margin:auto;font-family:var(--reader-font);font-size:var(--font-size);line-height:var(--line-height);overflow-wrap:anywhere;letter-spacing:.012em}
+.prose{max-width:680px;margin:auto;font-family:var(--reader-font);font-size:var(--font-size);line-height:var(--line-height);overflow-wrap:anywhere;letter-spacing:.012em}
 .prose h1{font-family:var(--reader-font);font-size:clamp(1.22em,4.7vw,1.65em);line-height:1.5;text-align:center;font-weight:700;margin:12px 0 1.9em;overflow-wrap:break-word;letter-spacing:.035em}
 .prose h2,.prose h3{line-height:1.6;margin:2em 0 1em}
 .prose p{margin:0 0 .85em;white-space:normal;overflow-wrap:break-word}
@@ -96,10 +96,6 @@ button{cursor:pointer}
 .toc-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid var(--line);margin:36px 0 10px}
 .toc-heading h2{border:0;margin:0;padding:0 0 12px}
 .toc-heading span{font-size:12px;color:var(--muted)}
-.search-wrapper{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:0 14px;min-height:48px;margin:0 0 10px;background:color-mix(in srgb,var(--bg) 92%,var(--fg) 8%)}
-.search-wrapper span{font-size:23px;color:var(--muted)}
-.search-wrapper input{background:transparent;border:0;outline:0;color:var(--fg);width:100%;font-size:16px;min-height:46px}
-.search-wrapper input::placeholder{color:var(--muted)}
 .toc li[hidden]{display:none}
 @media(max-width:374px){.color-choice{grid-template-columns:repeat(4,minmax(0,1fr))}.font-sample{font-size:14px}.reading-area{padding-left:15px;padding-right:15px}.brand{font-size:13px}}
 @media(min-width:600px){.font-choice{grid-template-columns:repeat(4,minmax(0,1fr))}.color-choice{grid-template-columns:repeat(8,minmax(0,1fr))}}
@@ -139,7 +135,6 @@ button{cursor:pointer}
 .toc-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding-bottom:14px}
 .toc-panel-head h2{font-size:17px;line-height:1.4;margin:3px 0 0;overflow-wrap:anywhere}
 .toc-panel-head .icon-btn{flex-shrink:0}
-.toc-search{flex-shrink:0;min-height:44px;margin:0 0 10px}
 .drawer-toc{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding-right:3px}
 .drawer-toc a{min-height:54px;padding:12px 10px;border-radius:9px;font-size:13px;line-height:1.5}
 .drawer-toc a[aria-current="page"]{background:color-mix(in srgb,var(--fg) 8%,var(--bg));color:var(--accent);font-weight:750}
@@ -250,7 +245,6 @@ body.reader-overlay-open{position:fixed;left:0;right:0;width:100%;overflow:hidde
 /* Chapter picker uses the same centered, height-bounded geometry as settings. */
 #chapter-list .toc-panel{min-height:0}
 #chapter-list .drawer-toc{min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-gutter:auto}
-#chapter-list .toc-search{min-height:44px}
 #chapter-list .toc-panel-back{flex:0 0 auto}
 @supports not (height:100dvh){#chapter-list{height:min(760px,calc(100vh - 28px))}}
 @media(max-height:540px){#chapter-list{height:calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom))}.toc-panel{padding-top:10px;padding-bottom:8px}}
@@ -351,3 +345,23 @@ body.reader-overlay-open{position:fixed;left:0;right:0;width:100%;overflow:hidde
 .velune-library .work-card-count{font-size:11px;color:var(--accent);font-weight:700}
 .velune-library .work-card-arrow{font-size:24px;font-weight:400;color:var(--accent);margin-left:auto}
 @media(max-width:400px){.velune-library .work-card{gap:11px}.velune-library .work-card-cover{width:62px;height:82px}.velune-library .work-card-cover img{width:42px;height:42px}.library-intro{padding:24px 15px}}
+
+/* Synopsis: no long wall of text on initial open; expand without JavaScript. */
+.synopsis-expander{font-size:14px;line-height:1.9;min-width:0}
+.synopsis-expander summary{cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;gap:7px;list-style:none;touch-action:manipulation;min-height:44px}
+.synopsis-expander summary::-webkit-details-marker{display:none}
+.synopsis-excerpt{display:block;line-height:1.85;color:var(--fg);overflow-wrap:anywhere}
+.synopsis-toggle{display:inline-flex;align-items:center;font-size:12px;min-height:28px;color:var(--accent);font-weight:750}
+.synopsis-expander[open] .synopsis-excerpt{display:none}
+.synopsis-expander[open] .synopsis-toggle{font-size:0}
+.synopsis-expander[open] .synopsis-toggle::after{content:"閉じる ↑";font-size:12px}
+.synopsis-expander .synopsis-full{margin:10px 0 0;line-height:1.95;white-space:pre-line}
+.open-episode-list{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:46px;border:1px solid #ffffff80;color:#fff8e8;border-radius:10px;font-size:13px;font-weight:700;padding:11px 15px}
+.open-episode-list:hover,.open-episode-list:focus-visible{background:#ffffff1b}
+.work-hero-main{display:block}
+.work-hero-info{width:100%}
+.work-hero{min-height:0}
+.work-hero h1{max-width:100%;font-size:clamp(22px,5vw,32px)}
+.velune-library .work-card{gap:13px}
+.velune-library .work-card-details{align-items:start}
+@media(max-width:540px){.work-hero h1{font-size:clamp(20px,5.6vw,27px)}.work-action-row{gap:8px}.open-episode-list{flex:1 1 155px}}
