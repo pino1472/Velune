@@ -110,9 +110,6 @@ def document(title: str, body: str, *, asset_prefix: str, is_episode: bool, toc_
                   f'<div class="toc-panel"><div class="toc-panel-head">'
                   f'<div><p class="settings-eyebrow">CHAPTERS</p><h2>{html.escape(work_title)}</h2></div>'
                   '<button id="close-toc" type="button" class="icon-btn" aria-label="目次を閉じる">×</button></div>'
-                  '<label class="search-wrapper toc-search"><span aria-hidden="true">⌕</span>'
-                  '<input id="chapter-filter" type="search" placeholder="話数・タイトルで検索"'
-                  ' aria-label="話数やタイトルで検索"></label>'
                   f'<ol class="toc drawer-toc">{toc_items}</ol>'
                   '<p class="toc-panel-back"><a href="../index.html">作品の目次ページへ</a></p></div></dialog>'
                   if is_episode else "")
@@ -349,10 +346,7 @@ self.addEventListener("fetch", event => {
         else if (response.status === 404 || response.status === 410) await cache.delete(req);
         return response;
       });
-      if (cached && req.cache !== "reload") {
-        event.waitUntil(update.catch(() => {}));
-        return cached;
-      }
+      // Online users always receive the latest chapter/TOC; cache remains for offline use.
       try { return await update; }
       catch {
         return cached || new Response(offlinePage, {status: 503, headers: {"Content-Type": "text/html; charset=utf-8"}});
@@ -364,12 +358,21 @@ self.addEventListener("fetch", event => {
     const cache = await caches.open(SHELL);
     const cached = await cache.match(req, {ignoreSearch: true});
     const root = new URL(scope);
-    if (cached) return cached;
-    if (url.pathname === root.pathname && req.mode === "navigate") {
-      const index = await cache.match(new URL("./index.html", scope));
-      if (index) return index;
+    // Network-first for the shell too: prevent first visits from seeing stale menus.
+    try {
+      const fresh = await fetch(req);
+      if (fresh.ok && (cached || SHELL_FILES.some(path => new URL(path, scope).pathname === url.pathname))) {
+        await cache.put(req, fresh.clone()).catch(() => {});
+      }
+      return fresh;
+    } catch {
+      if (cached) return cached;
+      if (url.pathname === root.pathname && req.mode === "navigate") {
+        const index = await cache.match(new URL("./index.html", scope));
+        if (index) return index;
+      }
+      return Response.error();
     }
-    return fetch(req);
   })());
 });
 '''
