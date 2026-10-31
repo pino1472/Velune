@@ -1,6 +1,6 @@
 # Velune
 
-リヴェルナ・オンラインをスマートフォンで読むための、GitHub Pages / PWA リーダーです。
+Lythiaで管理する複数の自作小説を、スマートフォンで読むためのGitHub Pages / PWAリーダーです。
 
 ## 仕組み
 
@@ -15,7 +15,7 @@
 
 ## 構成の移行（重要）
 
-`Revalna`側で`works/revalna`と`works/_template`を追加した移行PRをマージしてから、このVelune側の変更をマージしてください。**両方のPRが揃うまでは公開ビルドを実行しないでください。**
+Lythiaへの改名と、`works/revalna/`・`works/_template/`を含む構成移行が完了してから公開ビルドを実行してください。
 
 ## 初回設定（GitHub UIで行う操作）
 
@@ -24,7 +24,7 @@
 GitHubアカウントで **Fine-grained personal access token** を発行します。
 
 - Resource owner: `pino1472`
-- Repository access: **Only select repositories** → `Revalna` のみ
+- Repository access: **Only select repositories** → `Lythia` のみ
 - Repository permissions: **Contents: Read-only**（Metadata: Read-only は自動付与）
 - 有効期限は適切な期間を設定
 
@@ -32,7 +32,7 @@ GitHubアカウントで **Fine-grained personal access token** を発行しま�
 
 Veluneの **Settings → Secrets and variables → Actions → New repository secret** で以下を登録します。
 
-- Name: **`REVALNA_READ_TOKEN`**
+- Name: **`LYTHIA_READ_TOKEN`**（従来の `REVALNA_READ_TOKEN` も使用可能）
 - Secret: 発行したトークン
 
 公開リポジトリ内のコードにトークンを書かず、Actions実行中だけ認証に使います。
