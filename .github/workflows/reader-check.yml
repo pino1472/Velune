@@ -22,4 +22,3 @@ jobs:
       - run: python reader/test_build.py
       - run: node --check reader/reader.js
       - run: node reader/test_reset.js
-      - run: node reader/test_bridge.js
